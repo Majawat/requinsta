@@ -1,11 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-import enum
+from enum import Enum as PyEnum
 from app.models import Base
 
 
-class MediaType(str, enum.Enum):
+class MediaType(PyEnum):
     BOOK = "book"
     AUDIOBOOK = "audiobook"
     MOVIE = "movie"
@@ -15,13 +14,11 @@ class MediaType(str, enum.Enum):
     OTHER = "other"
 
 
-class RequestStatus(str, enum.Enum):
+class RequestStatus(PyEnum):
     PENDING = "pending"
-    REVIEWING = "reviewing"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    UNAVAILABLE = "unavailable"
-    DUPLICATE = "duplicate"
+    APPROVED = "approved"
+    FULFILLED = "fulfilled"
+    DENIED = "denied"
 
 
 class Request(Base):
@@ -35,5 +32,3 @@ class Request(Base):
     status = Column(Enum(RequestStatus), default=RequestStatus.PENDING)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    user = relationship("User", backref="requests")

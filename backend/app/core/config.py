@@ -1,23 +1,14 @@
-from pydantic_settings import BaseSettings
+import os
 from typing import List
-
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Requinsta"
-    VERSION: str = "0.1.0"
-
-    # Database
-    DATABASE_URL: str = "postgresql://requinsta:password@db:5432/requinsta"
-
-    # Security
-    SECRET_KEY: str = "your-secret-key-change-this"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://requinsta:password@localhost:5432/requinsta")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-
-    # CORS
     ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
 
     class Config:
         env_file = ".env"
-
 
 settings = Settings()

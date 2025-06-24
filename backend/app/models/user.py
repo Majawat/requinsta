@@ -1,12 +1,15 @@
+from enum import Enum as PyEnum
 from sqlalchemy import Column, Integer, String, DateTime, Enum
 from sqlalchemy.sql import func
-import enum
 from app.models import Base
 
 
-class UserRole(str, enum.Enum):
+class UserRole(PyEnum):
     ADMIN = "admin"
+    MODERATOR = "moderator"
+    POWER_USER = "power_user"
     USER = "user"
+    READ_ONLY = "read_only"
 
 
 class User(Base):
