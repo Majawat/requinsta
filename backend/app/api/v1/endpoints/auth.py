@@ -44,9 +44,15 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
         )
 
+    # Check if this is the first user
+    user_count = db.query(User).count()
+    role = UserRole.ADMIN if user_count == 0 else UserRole.USER
+
     hashed_password = get_password_hash(user_data.password)
     user = User(
-        email=user_data.email, password_hash=hashed_password, role=UserRole.USER
+        email=user_data.email,
+        password_hash=hashed_password,
+        role=role,  # Use the determined role
     )
     db.add(user)
     db.commit()

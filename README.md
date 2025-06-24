@@ -32,10 +32,10 @@ docker-compose up
 Frontend: http://localhost:3000
 Backend API: http://localhost:8000
 
-### First Admin User
+### First Admin User (shouldn't be needed, should be done by UI)
 
 ```bash
-sqldocker-compose exec db psql -U requinsta -d requinsta -c "UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';"
+docker compose exec db psql -U requinsta -d requinsta -c "UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';"
 ```
 
 ## Contributing

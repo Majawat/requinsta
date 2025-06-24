@@ -16,10 +16,6 @@
       </div>
     </nav>
 
-    <div v-if="authStore.isAuthenticated" class="bg-red-100 p-2">
-      Debug: User role is "{{ authStore.user?.role }}"
-    </div>
-
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div v-if="!authStore.isAuthenticated">
         <LoginForm />
@@ -32,14 +28,18 @@
           <p class="text-yellow-800 font-medium">Admin Mode</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <RequestForm @request-created="loadRequests" />
 
           <AdminPanel
             v-if="authStore.user?.role.toLowerCase() === 'admin'"
             :requests="requestsStore.requests" />
 
-          <div v-else class="bg-white p-6 rounded-lg shadow-md">
+          <UserManagement v-if="authStore.user?.role.toLowerCase() === 'admin'" />
+
+          <div
+            v-if="authStore.user?.role.toLowerCase() !== 'admin'"
+            class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-bold mb-4">All Requests</h2>
             <div v-if="requestsStore.loading" class="text-gray-500">Loading...</div>
             <div v-else-if="requestsStore.requests.length === 0" class="text-gray-500">
@@ -78,6 +78,7 @@ import { useRequestsStore } from "./stores/requests";
 import LoginForm from "./components/LoginForm.vue";
 import RequestForm from "./components/RequestForm.vue";
 import AdminPanel from "./components/AdminPanel.vue";
+import UserManagement from "./components/UserManagement.vue";
 
 export default {
   name: "App",
@@ -85,6 +86,7 @@ export default {
     LoginForm,
     RequestForm,
     AdminPanel,
+    UserManagement,
   },
   setup() {
     const authStore = useAuthStore();

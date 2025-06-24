@@ -15,10 +15,10 @@ class MediaType(PyEnum):
 
 
 class RequestStatus(PyEnum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    FULFILLED = "fulfilled"
-    DENIED = "denied"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    FULFILLED = "FULFILLED"
+    DENIED = "DENIED"
 
 
 class Request(Base):

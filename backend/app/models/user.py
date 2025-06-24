@@ -5,11 +5,11 @@ from app.models import Base
 
 
 class UserRole(PyEnum):
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-    POWER_USER = "power_user"
-    USER = "user"
-    READ_ONLY = "read_only"
+    ADMIN = "ADMIN"
+    MODERATOR = "MODERATOR"
+    POWER_USER = "POWER_USER"
+    USER = "USER"
+    READ_ONLY = "READ_ONLY"
 
 
 class User(Base):
