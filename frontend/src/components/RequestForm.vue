@@ -7,15 +7,32 @@
         <label class="block text-sm font-medium text-gray-300">Title</label>
         <input
           v-model="title"
+          @input="searchMetadata"
           type="text"
           required
           class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+
+        <!-- Metadata suggestions -->
+        <div
+          v-if="metadataResults.length > 0"
+          class="mt-2 bg-gray-700 border border-gray-600 rounded-md max-h-48 overflow-y-auto">
+          <div
+            v-for="(result, index) in metadataResults"
+            :key="index"
+            @click="selectMetadata(result)"
+            class="p-2 hover:bg-gray-600 cursor-pointer border-b border-gray-600 last:border-b-0">
+            <div class="text-white text-sm font-medium">{{ result.title }}</div>
+            <div v-if="result.author" class="text-gray-300 text-xs">by {{ result.author }}</div>
+            <div v-if="result.year" class="text-gray-400 text-xs">{{ result.year }}</div>
+          </div>
+        </div>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-300">Media Type</label>
         <select
           v-model="mediaType"
+          @change="searchMetadata"
           required
           class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
           <option value="book">Book</option>
@@ -52,6 +69,7 @@
 
 <script>
 import { useRequestsStore } from "../stores/requests";
+import axios from "axios";
 
 export default {
   name: "RequestForm",
@@ -62,6 +80,8 @@ export default {
       mediaType: "book",
       loading: false,
       error: "",
+      metadataResults: [],
+      searchTimeout: null,
     };
   },
   methods: {
@@ -82,6 +102,7 @@ export default {
           this.title = "";
           this.description = "";
           this.mediaType = "book";
+          this.metadataResults = [];
           this.$emit("request-created");
         } else {
           this.error = result.error;
@@ -89,6 +110,42 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    searchMetadata() {
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
+
+      this.searchTimeout = setTimeout(async () => {
+        if (this.title.length < 3) {
+          this.metadataResults = [];
+          return;
+        }
+
+        try {
+          const response = await axios.get(`http://localhost:8000/api/v1/metadata/search`, {
+            params: { query: this.title, media_type: this.mediaType },
+          });
+
+          // Flatten results from all providers
+          this.metadataResults = [];
+          Object.values(response.data).forEach((providerResults) => {
+            this.metadataResults.push(...providerResults.slice(0, 3)); // Limit per provider
+          });
+        } catch (error) {
+          console.error("Metadata search error:", error);
+          this.metadataResults = [];
+        }
+      }, 300);
+    },
+
+    selectMetadata(metadata) {
+      this.title = metadata.title;
+      if (metadata.description && !this.description) {
+        this.description = metadata.description;
+      }
+      this.metadataResults = [];
     },
   },
 };
