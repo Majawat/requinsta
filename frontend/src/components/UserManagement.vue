@@ -1,26 +1,26 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-xl font-bold mb-4">User Management</h2>
+  <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-bold mb-4 text-white">User Management</h2>
 
     <!-- Add User Form -->
-    <div class="border-b pb-4 mb-4">
-      <h3 class="text-lg font-medium mb-2">Add New User</h3>
+    <div class="border-b border-gray-600 pb-4 mb-4">
+      <h3 class="text-lg font-medium mb-2 text-white">Add New User</h3>
       <form @submit.prevent="addUser" class="space-y-2">
         <input
           v-model="newUser.email"
           type="email"
           placeholder="Email"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
         <input
           v-model="newUser.password"
           type="password"
           placeholder="Password"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" />
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
         <select
           v-model="newUser.role"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
           <option value="READ_ONLY">Read Only</option>
           <option value="USER">User</option>
           <option value="POWER_USER">Power User</option>
@@ -37,16 +37,16 @@
     </div>
 
     <!-- Users List -->
-    <div v-if="loading" class="text-gray-500">Loading users...</div>
+    <div v-if="loading" class="text-gray-400">Loading users...</div>
     <div v-else class="space-y-3">
       <div
         v-for="user in users"
         :key="user.id"
-        class="border border-gray-200 rounded p-3 flex justify-between items-center">
+        class="border border-gray-600 rounded p-3 flex justify-between items-center bg-gray-700">
         <div>
-          <h3 class="font-medium">{{ user.email }}</h3>
+          <h3 class="font-medium text-white">{{ user.email }}</h3>
           <span
-            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
             {{ user.role }}
           </span>
         </div>
@@ -54,7 +54,7 @@
           <select
             :value="user.role"
             @change="updateUserRole(user.id, $event.target.value)"
-            class="text-xs border border-gray-300 rounded px-2 py-1">
+            class="text-xs bg-gray-600 border border-gray-500 rounded px-2 py-1 text-white">
             <option value="READ_ONLY">Read Only</option>
             <option value="USER">User</option>
             <option value="POWER_USER">Power User</option>

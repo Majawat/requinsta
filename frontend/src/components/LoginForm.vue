@@ -1,27 +1,27 @@
 <template>
-  <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4">{{ isLogin ? "Login" : "Register" }}</h2>
+  <div class="max-w-md mx-auto bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-white">{{ isLogin ? "Login" : "Register" }}</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <label class="block text-sm font-medium text-gray-300">Email</label>
         <input
           v-model="email"
           type="email"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
+        <label class="block text-sm font-medium text-gray-300">Password</label>
         <input
           v-model="password"
           type="password"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
       </div>
 
-      <div v-if="error" class="text-red-600 text-sm">
+      <div v-if="error" class="text-red-400 text-sm">
         {{ error }}
       </div>
 
@@ -33,9 +33,9 @@
       </button>
     </form>
 
-    <p class="mt-4 text-center text-sm text-gray-600">
+    <p class="mt-4 text-center text-sm text-gray-400">
       {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
-      <button @click="toggleMode" class="font-medium text-indigo-600 hover:text-indigo-500">
+      <button @click="toggleMode" class="font-medium text-indigo-400 hover:text-indigo-300">
         {{ isLogin ? "Register" : "Login" }}
       </button>
     </p>

@@ -1,13 +1,16 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-xl font-bold mb-4">Admin Panel</h2>
+  <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
+    <h2 class="text-xl font-bold mb-4 text-white">Admin Panel</h2>
     <div class="space-y-3">
-      <div v-for="request in requests" :key="request.id" class="border border-gray-200 rounded p-3">
-        <h3 class="font-medium">{{ request.title }}</h3>
-        <p class="text-sm text-gray-600">{{ request.description }}</p>
+      <div
+        v-for="request in requests"
+        :key="request.id"
+        class="border border-gray-600 rounded p-3 bg-gray-700">
+        <h3 class="font-medium text-white">{{ request.title }}</h3>
+        <p class="text-sm text-gray-300">{{ request.description }}</p>
         <div class="flex justify-between items-center mt-2">
           <span
-            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
             {{ request.media_type }}
           </span>
           <div class="flex space-x-2">
@@ -29,7 +32,7 @@
           </div>
         </div>
         <span
-          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-2">
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600 text-gray-200 mt-2">
           {{ request.status }}
         </span>
       </div>

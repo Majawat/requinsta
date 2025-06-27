@@ -1,23 +1,23 @@
 <template>
-  <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4">New Request</h2>
+  <div class="max-w-md mx-auto bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-white">New Request</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Title</label>
+        <label class="block text-sm font-medium text-gray-300">Title</label>
         <input
           v-model="title"
           type="text"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Media Type</label>
+        <label class="block text-sm font-medium text-gray-300">Media Type</label>
         <select
           v-model="mediaType"
           required
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
           <option value="book">Book</option>
           <option value="audiobook">Audiobook</option>
           <option value="movie">Movie</option>
@@ -29,14 +29,14 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Description</label>
+        <label class="block text-sm font-medium text-gray-300">Description</label>
         <textarea
           v-model="description"
           rows="3"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
       </div>
 
-      <div v-if="error" class="text-red-600 text-sm">
+      <div v-if="error" class="text-red-400 text-sm">
         {{ error }}
       </div>
 
