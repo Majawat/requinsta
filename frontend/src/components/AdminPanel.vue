@@ -50,6 +50,13 @@ export default {
     requests: Array,
   },
   methods: {
+    /**
+     * Updates request status via API and refreshes requests list
+     * @async
+     * @param {number|string} requestId - The ID of the request to update
+     * @param {string} status - The new status (APPROVED, FULFILLED, DENIED)
+     * @returns {Promise<void>}
+     */
     async updateStatus(requestId, status) {
       try {
         await axios.patch(`http://localhost:8000/api/v1/admin/requests/${requestId}/status`, {

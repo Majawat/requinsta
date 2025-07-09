@@ -10,6 +10,12 @@ export const useRequestsStore = defineStore("requests", {
   }),
 
   actions: {
+    /**
+     * Fetches all requests from the API and updates the store state
+     * @async
+     * @returns {Promise<void>}
+     * @throws {Error} If the API request fails
+     */
     async fetchRequests() {
       this.loading = true;
       try {
@@ -22,6 +28,16 @@ export const useRequestsStore = defineStore("requests", {
       }
     },
 
+    /**
+     * Creates a new request with the provided data and adds it to the store
+     * @async
+     * @param {Object} requestData - The request data to create
+     * @param {string} requestData.title - The title of the requested media
+     * @param {string} requestData.media_type - The type of media (book, movie, etc.)
+     * @param {string} [requestData.description] - Optional description
+     * @returns {Promise<Object>} Result object with success status and data or error
+     * @throws {Error} If the API request fails
+     */
     async createRequest(requestData) {
       try {
         const response = await axios.post(`${API_URL}/requests/`, requestData);

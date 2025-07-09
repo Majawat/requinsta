@@ -93,6 +93,11 @@ export default {
     const authStore = useAuthStore();
     const requestsStore = useRequestsStore();
 
+    /**
+     * Loads requests from the store if user is authenticated
+     * @async
+     * @returns {Promise<void>}
+     */
     const loadRequests = async () => {
       if (authStore.isAuthenticated) {
         await requestsStore.fetchRequests();

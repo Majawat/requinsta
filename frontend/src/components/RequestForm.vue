@@ -85,6 +85,11 @@ export default {
     };
   },
   methods: {
+    /**
+     * Handles form submission to create a new request, emits success event
+     * @async
+     * @returns {Promise<void>}
+     */
     async handleSubmit() {
       this.loading = true;
       this.error = "";
@@ -112,6 +117,10 @@ export default {
       }
     },
 
+    /**
+     * Debounced search for metadata suggestions based on title and media type
+     * @returns {void}
+     */
     searchMetadata() {
       if (this.searchTimeout) {
         clearTimeout(this.searchTimeout);
@@ -140,6 +149,13 @@ export default {
       }, 300);
     },
 
+    /**
+     * Selects metadata from search results and populates form fields
+     * @param {Object} metadata - The selected metadata object
+     * @param {string} metadata.title - The title of the media
+     * @param {string} [metadata.description] - Optional description
+     * @returns {void}
+     */
     selectMetadata(metadata) {
       this.title = metadata.title;
       if (metadata.description && !this.description) {

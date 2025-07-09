@@ -93,6 +93,11 @@ export default {
     await this.fetchUsers();
   },
   methods: {
+    /**
+     * Fetches all users from admin API and updates component state
+     * @async
+     * @returns {Promise<void>}
+     */
     async fetchUsers() {
       this.loading = true;
       try {
@@ -105,6 +110,11 @@ export default {
       }
     },
 
+    /**
+     * Creates a new user with provided form data and refreshes users list
+     * @async
+     * @returns {Promise<void>}
+     */
     async addUser() {
       this.adding = true;
       try {
@@ -119,6 +129,13 @@ export default {
       }
     },
 
+    /**
+     * Updates user role via API and refreshes users list
+     * @async
+     * @param {number|string} userId - The ID of the user to update
+     * @param {string} newRole - The new role to assign
+     * @returns {Promise<void>}
+     */
     async updateUserRole(userId, newRole) {
       try {
         await axios.patch(`http://localhost:8000/api/v1/admin/users/${userId}/role`, {
@@ -130,6 +147,12 @@ export default {
       }
     },
 
+    /**
+     * Deletes user after confirmation prompt and refreshes users list
+     * @async
+     * @param {number|string} userId - The ID of the user to delete
+     * @returns {Promise<void>}
+     */
     async deleteUser(userId) {
       if (!confirm("Are you sure you want to delete this user?")) return;
 

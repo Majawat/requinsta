@@ -57,6 +57,11 @@ export default {
     };
   },
   methods: {
+    /**
+     * Handles form submission for login or registration based on current mode
+     * @async
+     * @returns {Promise<void>}
+     */
     async handleSubmit() {
       this.loading = true;
       this.error = "";
@@ -82,6 +87,10 @@ export default {
       }
     },
 
+    /**
+     * Toggles between login and registration modes, clears error messages
+     * @returns {void}
+     */
     toggleMode() {
       this.isLogin = !this.isLogin;
       this.error = "";
