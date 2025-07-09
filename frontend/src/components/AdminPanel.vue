@@ -59,7 +59,7 @@ export default {
      */
     async updateStatus(requestId, status) {
       try {
-        await axios.patch(`http://localhost:8000/api/v1/admin/requests/${requestId}/status`, {
+        await axios.patch(`http://${window.location.hostname}:8000/api/v1/admin/requests/${requestId}/status`, {
           status: status,
         });
 

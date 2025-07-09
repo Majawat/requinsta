@@ -101,7 +101,7 @@ export default {
     async fetchUsers() {
       this.loading = true;
       try {
-        const response = await axios.get("http://localhost:8000/api/v1/admin/users");
+        const response = await axios.get(`http://${window.location.hostname}:8000/api/v1/admin/users`);
         this.users = response.data;
       } catch (error) {
         console.error("Failed to fetch users:", error);
@@ -118,7 +118,7 @@ export default {
     async addUser() {
       this.adding = true;
       try {
-        await axios.post("http://localhost:8000/api/v1/admin/users", this.newUser);
+        await axios.post(`http://${window.location.hostname}:8000/api/v1/admin/users`, this.newUser);
         this.newUser = { email: "", password: "", role: "USER" };
         await this.fetchUsers();
       } catch (error) {
@@ -138,7 +138,7 @@ export default {
      */
     async updateUserRole(userId, newRole) {
       try {
-        await axios.patch(`http://localhost:8000/api/v1/admin/users/${userId}/role`, {
+        await axios.patch(`http://${window.location.hostname}:8000/api/v1/admin/users/${userId}/role`, {
           role: newRole,
         });
         await this.fetchUsers();
@@ -157,7 +157,7 @@ export default {
       if (!confirm("Are you sure you want to delete this user?")) return;
 
       try {
-        await axios.delete(`http://localhost:8000/api/v1/admin/users/${userId}`);
+        await axios.delete(`http://${window.location.hostname}:8000/api/v1/admin/users/${userId}`);
         await this.fetchUsers();
       } catch (error) {
         console.error("Failed to delete user:", error);

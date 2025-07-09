@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://requinsta:password@localhost:5432/requinsta")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    ALLOWED_HOSTS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    ALLOWED_HOSTS: List[str] = ["*"]
 
     class Config:
         env_file = ".env"
