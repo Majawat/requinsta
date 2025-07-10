@@ -8,6 +8,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+# Import all models to ensure they're registered
+from app.models.user import User
+from app.models.request import Request
+from app.models.setting import Setting
+
 
 def get_db():
     db = SessionLocal()

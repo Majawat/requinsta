@@ -16,6 +16,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://requinsta:password@db:5432/requinsta
+      - TMDB_API_KEY=${TMDB_API_KEY}
     depends_on:
       - db
     volumes:

@@ -1,6 +1,7 @@
 from typing import Dict, List
 from app.plugins.base import MetadataProvider, MediaMetadata
 from app.plugins.openlibrary import OpenLibraryProvider
+from app.plugins.tmdb import TMDBProvider
 
 
 class PluginManager:
@@ -11,6 +12,7 @@ class PluginManager:
     def _register_default_plugins(self):
         """Register built-in plugins"""
         self.register_provider(OpenLibraryProvider())
+        self.register_provider(TMDBProvider())
 
     def register_provider(self, provider: MetadataProvider):
         """Register a metadata provider"""

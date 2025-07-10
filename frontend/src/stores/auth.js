@@ -8,6 +8,7 @@ export const useAuthStore = defineStore("auth", {
     user: null,
     token: localStorage.getItem("token"),
     isAuthenticated: false,
+    initialized: false,
   }),
 
   actions: {
@@ -77,6 +78,7 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       this.token = null;
       this.isAuthenticated = false;
+      this.initialized = false;
       localStorage.removeItem("token");
       delete axios.defaults.headers.common["Authorization"];
     },
@@ -91,6 +93,7 @@ export const useAuthStore = defineStore("auth", {
         axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
         await this.fetchUser();
       }
+      this.initialized = true;
     },
   },
 });
