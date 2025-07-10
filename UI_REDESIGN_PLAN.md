@@ -225,54 +225,69 @@ src/
 
 ## Next Steps (Phase 6: Polish & Enhancement)
 
-### Priority 1: Testing & Refinement
-1. **End-to-End Testing** 
-   - Test complete search → request workflow
-   - Verify API key management functionality
-   - Mobile responsiveness testing
-   - Error handling validation
+### 🎯 **GitHub Project Organization:**
 
-2. **Performance Optimization**
-   - Optimize metadata API calls
-   - Implement result caching
-   - Image loading optimization
-   - Database query optimization
+#### **📋 Milestones Created:**
+- **MVP Completion** (Due: July 25, 2025) - Core functionality completion
+- **Phase 6: Polish & Enhancement** (Due: August 15, 2025) - Advanced features and UX
 
-### Priority 2: Additional Providers
-3. **More Metadata Sources**
+#### **📝 GitHub Issues Created:**
+**MVP Completion Milestone:**
+- **#1**: MVP: Basic request system (High Priority) 
+- **#17**: Comments/Messaging System (High Priority)
+- **#18**: Duplicate Request Detection (Medium Priority)
+
+**Phase 6 Milestone:**
+- **#15**: Modal Components Implementation (Medium Priority)
+- **#16**: Additional Metadata Providers (High Priority) 
+- **#19**: Bulk Operations for Admin (Medium Priority)
+
+### Priority 1: Core Functionality Completion
+1. **Comments/Messaging System (#17)** 🔥 **HIGH PRIORITY**
+   - Complete MVP requirement from issue #1
+   - Enable admin-user communication on requests
+   - Database schema and API endpoints
+
+2. **Additional Metadata Providers (#16)** 🔥 **HIGH PRIORITY**
    - Spotify API for music metadata
    - IGDB API for video game metadata
    - Comic Vine API for comic books
    - MusicBrainz for free music metadata
 
-4. **Provider Management**
-   - Enable/disable providers through admin UI
-   - Provider health monitoring
-   - Rate limiting and API quotas
-
-### Priority 3: Advanced Features
-5. **Bulk Operations**
-   - Multi-select for requests
-   - Batch approve/deny functionality
-   - Export/import capabilities
-
-6. **Real-time Updates**
-   - WebSocket connections for live updates
-   - Push notifications for status changes
-   - Activity feeds
-
-### Priority 4: User Experience
-7. **Modal Components**
+### Priority 2: User Experience Enhancement
+3. **Modal Components (#15)** 📱 **MEDIUM PRIORITY**
    - Request detail modal
    - Confirmation modals
    - Media preview modal
 
-8. **Advanced Search**
+4. **Duplicate Request Detection (#18)** 📱 **MEDIUM PRIORITY**
+   - Metadata-based and fuzzy matching
+   - Pre-submission warnings
+   - Admin duplicate management
+
+### Priority 3: Admin Efficiency
+5. **Bulk Operations (#19)** ⚙️ **MEDIUM PRIORITY**
+   - Multi-select for requests
+   - Batch approve/deny functionality
+   - Export/import capabilities
+
+6. **Real-time Updates** ⚙️ **FUTURE**
+   - WebSocket connections for live updates
+   - Push notifications for status changes
+   - Activity feeds
+
+### Priority 4: Advanced Features (Future)
+7. **Advanced Search**
    - Filters by media type, year, rating
    - Saved searches
    - Search history
 
-### Priority 5: Production Readiness
+8. **Testing & Optimization**
+   - End-to-end testing automation
+   - Performance optimization
+   - Database query optimization
+
+### Priority 5: Production Readiness (Future)
 9. **Deployment**
    - Docker production configuration
    - SSL/HTTPS setup
