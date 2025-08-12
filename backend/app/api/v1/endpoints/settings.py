@@ -46,7 +46,7 @@ def require_admin(current_user: User = Depends(get_current_user)):
 @router.get("/", response_model=List[SettingResponse])
 def get_settings(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    _: User = Depends(require_admin)
 ):
     """Get all settings (admin only)"""
     settings = db.query(Setting).all()
@@ -63,7 +63,7 @@ def get_settings(
 def create_setting(
     setting: SettingCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    _: User = Depends(require_admin)
 ):
     """Create a new setting (admin only)"""
     # Check if setting already exists
@@ -96,7 +96,7 @@ def update_setting(
     setting_key: str,
     setting: SettingUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    _: User = Depends(require_admin)
 ):
     """Update a setting (admin only)"""
     db_setting = db.query(Setting).filter(Setting.key == setting_key).first()
@@ -124,7 +124,7 @@ def update_setting(
 def delete_setting(
     setting_key: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    _: User = Depends(require_admin)
 ):
     """Delete a setting (admin only)"""
     db_setting = db.query(Setting).filter(Setting.key == setting_key).first()

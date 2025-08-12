@@ -19,7 +19,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     reviewers:
-      - "@Majawat"  # Replace with your GitHub username
+      - "@Majawat"
     commit-message:
       prefix: "deps"
       include: "scope"
@@ -31,7 +31,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 3
     reviewers:
-      - "@Majawat"  # Replace with your GitHub username
+      - "@Majawat"
     commit-message:
       prefix: "docker"
       include: "scope"
@@ -43,7 +43,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 3
     reviewers:
-      - "@Majawat"  # Replace with your GitHub username
+      - "@Majawat"
     commit-message:
       prefix: "ci"
       include: "scope"
