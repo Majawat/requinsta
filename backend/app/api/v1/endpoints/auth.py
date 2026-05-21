@@ -1,18 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
+
 from app.models import get_db
 from app.models.user import User, UserRole
-from app.core.security import (
-    get_password_hash,
-    authenticate_user,
-    create_access_token,
-    get_current_user,
-)
+from app.core.security import get_password_hash, authenticate_user, create_access_token
+from app.api.v1.deps import get_authenticated_user
 
 router = APIRouter()
-security = HTTPBearer()
 
 
 class UserCreate(BaseModel):
@@ -44,7 +39,6 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
         )
 
-    # Check if this is the first user
     user_count = db.query(User).count()
     role = UserRole.ADMIN if user_count == 0 else UserRole.USER
 
@@ -52,12 +46,11 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     user = User(
         email=user_data.email,
         password_hash=hashed_password,
-        role=role,  # Use the determined role
+        role=role,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-
     return UserResponse(id=user.id, email=user.email, role=user.role)
 
 
@@ -74,13 +67,5 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
-):
-    user = get_current_user(db, credentials.credentials)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
-    return UserResponse(id=user.id, email=user.email, role=user.role)
+async def get_current_user_info(current_user: User = Depends(get_authenticated_user)):
+    return UserResponse(id=current_user.id, email=current_user.email, role=current_user.role)

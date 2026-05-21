@@ -21,6 +21,8 @@ class OpenLibraryProvider(MetadataProvider):
             response = await client.get(
                 "https://openlibrary.org/search.json", params={"q": query, "limit": 10}
             )
+            if response.status_code != 200:
+                return []
             data = response.json()
 
         results = []
@@ -43,7 +45,6 @@ class OpenLibraryProvider(MetadataProvider):
             )
             if response.status_code != 200:
                 return None
-
             data = response.json()
 
         return MediaMetadata(

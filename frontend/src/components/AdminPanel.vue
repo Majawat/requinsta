@@ -43,28 +43,25 @@
 <script>
 import { useRequestsStore } from "../stores/requests";
 import axios from "axios";
+import { API_URL } from "../utils/api";
 
 export default {
   name: "AdminPanel",
   props: {
     requests: Array,
   },
+  created() {
+    this.requestsStore = useRequestsStore();
+  },
   methods: {
-    /**
-     * Updates request status via API and refreshes requests list
-     * @async
-     * @param {number|string} requestId - The ID of the request to update
-     * @param {string} status - The new status (APPROVED, FULFILLED, DENIED)
-     * @returns {Promise<void>}
-     */
     async updateStatus(requestId, status) {
       try {
-        await axios.patch(`http://${window.location.hostname}:8000/api/v1/admin/requests/${requestId}/status`, {
-          status: status,
-        });
-
-        const requestsStore = useRequestsStore();
-        await requestsStore.fetchRequests();
+        const { data } = await axios.patch(
+          `${API_URL}/admin/requests/${requestId}/status`,
+          { status }
+        );
+        const idx = this.requestsStore.requests.findIndex(r => r.id === requestId);
+        if (idx !== -1) this.requestsStore.requests[idx] = data;
       } catch (error) {
         console.error("Failed to update status:", error);
       }

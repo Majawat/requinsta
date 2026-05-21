@@ -9,7 +9,7 @@
     <!-- Settings form -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
       <h3 class="text-lg font-medium text-white mb-4">API Configuration</h3>
-      
+
       <div class="space-y-4">
         <!-- TMDB API Key -->
         <div>
@@ -50,7 +50,7 @@
     <!-- Current Settings -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
       <h3 class="text-lg font-medium text-white mb-4">Current Settings</h3>
-      
+
       <div class="space-y-3">
         <div v-for="setting in settings" :key="setting.key" class="flex justify-between items-center p-3 bg-gray-700 rounded">
           <div>
@@ -69,7 +69,7 @@
             </button>
           </div>
         </div>
-        
+
         <div v-if="settings.length === 0" class="text-center text-gray-400 py-8">
           No settings configured yet.
         </div>
@@ -85,13 +85,12 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { API_URL } from '../utils/api'
 
 export default {
   name: 'AdminSettings',
   setup() {
-    const authStore = useAuthStore()
     const settings = ref([])
     const tmdbApiKey = ref('')
     const showTmdbKey = ref(false)
@@ -99,8 +98,6 @@ export default {
     const loading = ref(false)
     const message = ref('')
     const messageType = ref('')
-
-    const API_URL = `http://${window.location.hostname}:8000/api/v1`
 
     const showMessage = (text, type = 'success') => {
       message.value = text
@@ -115,8 +112,7 @@ export default {
         loading.value = true
         const response = await axios.get(`${API_URL}/settings/`)
         settings.value = response.data
-        
-        // Pre-fill TMDB key if it exists
+
         const tmdbSetting = settings.value.find(s => s.key === 'TMDB_API_KEY')
         if (tmdbSetting) {
           tmdbApiKey.value = tmdbSetting.value === '***' ? '' : tmdbSetting.value
@@ -132,30 +128,29 @@ export default {
     const saveSettings = async () => {
       try {
         saving.value = true
-        
+
         if (tmdbApiKey.value.trim()) {
-          // Check if TMDB setting exists
           const existingSetting = settings.value.find(s => s.key === 'TMDB_API_KEY')
-          
+
           if (existingSetting) {
-            // Update existing setting
-            await axios.put(`${API_URL}/settings/TMDB_API_KEY`, {
+            const { data: updated } = await axios.put(`${API_URL}/settings/TMDB_API_KEY`, {
               value: tmdbApiKey.value.trim(),
               description: 'TMDB API key for movie and TV show metadata'
             })
+            const idx = settings.value.findIndex(s => s.key === 'TMDB_API_KEY')
+            if (idx !== -1) settings.value[idx] = updated
           } else {
-            // Create new setting
-            await axios.post(`${API_URL}/settings/`, {
+            const { data: created } = await axios.post(`${API_URL}/settings/`, {
               key: 'TMDB_API_KEY',
               value: tmdbApiKey.value.trim(),
               description: 'TMDB API key for movie and TV show metadata',
               is_secret: true
             })
+            settings.value.push(created)
           }
         }
-        
+
         showMessage('Settings saved successfully!')
-        await fetchSettings()
       } catch (error) {
         console.error('Error saving settings:', error)
         showMessage('Failed to save settings', 'error')
@@ -168,11 +163,11 @@ export default {
       if (!confirm(`Are you sure you want to delete the setting "${key}"?`)) {
         return
       }
-      
+
       try {
         await axios.delete(`${API_URL}/settings/${key}`)
+        settings.value = settings.value.filter(s => s.key !== key)
         showMessage('Setting deleted successfully!')
-        await fetchSettings()
       } catch (error) {
         console.error('Error deleting setting:', error)
         showMessage('Failed to delete setting', 'error')

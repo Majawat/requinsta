@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-
-const API_URL = `http://${window.location.hostname}:8000/api/v1`;
+import { API_URL } from "../utils/api";
 
 export const useRequestsStore = defineStore("requests", {
   state: () => ({
@@ -9,13 +8,15 @@ export const useRequestsStore = defineStore("requests", {
     loading: false,
   }),
 
+  getters: {
+    recentRequests: (state) =>
+      state.requests
+        .slice()
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5),
+  },
+
   actions: {
-    /**
-     * Fetches all requests from the API and updates the store state
-     * @async
-     * @returns {Promise<void>}
-     * @throws {Error} If the API request fails
-     */
     async fetchRequests() {
       this.loading = true;
       try {
@@ -28,16 +29,6 @@ export const useRequestsStore = defineStore("requests", {
       }
     },
 
-    /**
-     * Creates a new request with the provided data and adds it to the store
-     * @async
-     * @param {Object} requestData - The request data to create
-     * @param {string} requestData.title - The title of the requested media
-     * @param {string} requestData.media_type - The type of media (book, movie, etc.)
-     * @param {string} [requestData.description] - Optional description
-     * @returns {Promise<Object>} Result object with success status and data or error
-     * @throws {Error} If the API request fails
-     */
     async createRequest(requestData) {
       try {
         const response = await axios.post(`${API_URL}/requests/`, requestData);

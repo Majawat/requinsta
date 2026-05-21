@@ -13,7 +13,7 @@
         </div>
         <h1 class="ml-3 text-xl font-semibold text-white">Requinsta</h1>
       </div>
-      
+
       <div class="mt-5 flex-1 flex flex-col">
         <nav class="flex-1 px-2 pb-4 space-y-1">
           <router-link
@@ -28,8 +28,8 @@
             ]"
             @click="$emit('close')"
           >
-            <component 
-              :is="item.icon" 
+            <component
+              :is="item.icon"
               :class="[
                 $route.name === item.name ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300',
                 'mr-3 flex-shrink-0 h-6 w-6'
@@ -47,7 +47,6 @@
 import { computed } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 
-// Icons as inline SVG components
 const DashboardIcon = {
   template: `
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,23 +115,16 @@ export default {
         { name: 'My Requests', href: '/my-requests', icon: 'RequestsIcon' },
       ]
 
-      // Add admin navigation if user is admin
-      if (authStore.user?.role.toLowerCase() === 'admin') {
-        baseNavigation.push(
-          { name: 'Admin', href: '/admin', icon: 'AdminIcon' }
-        )
+      if (authStore.isAdmin) {
+        baseNavigation.push({ name: 'Admin', href: '/admin', icon: 'AdminIcon' })
       }
 
-      baseNavigation.push(
-        { name: 'Profile', href: '/profile', icon: 'ProfileIcon' }
-      )
+      baseNavigation.push({ name: 'Profile', href: '/profile', icon: 'ProfileIcon' })
 
       return baseNavigation
     })
 
-    return {
-      navigation
-    }
+    return { navigation }
   }
 }
 </script>

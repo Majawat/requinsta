@@ -4,7 +4,6 @@ from app.core.config import settings
 from app.api.v1.api import api_router
 from app.models import Base, engine
 
-# Create tables on startup
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -16,7 +15,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_HOSTS,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

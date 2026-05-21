@@ -10,6 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from app.models import Base
 from app.models.user import User
 from app.models.request import Request
+from app.models.setting import Setting
 from app.core.config import settings
 
 config = context.config
