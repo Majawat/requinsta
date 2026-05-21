@@ -67,18 +67,15 @@
                 {{ request.status }}
               </span>
             </div>
-            
+
             <p class="text-gray-300 mt-2">{{ request.description }}</p>
-            
+
             <div class="flex items-center mt-4 space-x-4">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
                 {{ request.media_type }}
               </span>
               <span class="text-sm text-gray-400">
                 Requested on {{ formatDate(request.created_at) }}
-              </span>
-              <span v-if="request.updated_at !== request.created_at" class="text-sm text-gray-400">
-                Updated {{ formatDate(request.updated_at) }}
               </span>
             </div>
 
@@ -119,6 +116,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useRequestsStore } from '../stores/requests'
+import { getStatusClasses, formatDate } from '../utils/requestUtils'
 
 export default {
   name: 'MyRequests',
@@ -127,62 +125,25 @@ export default {
     const activeFilter = ref('all')
 
     const filters = computed(() => {
-      const requests = requestsStore.requests
+      const counts = requestsStore.requests.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1
+        return acc
+      }, {})
       return [
-        {
-          key: 'all',
-          label: 'All Requests',
-          count: requests.length
-        },
-        {
-          key: 'pending',
-          label: 'Pending',
-          count: requests.filter(r => r.status === 'PENDING').length
-        },
-        {
-          key: 'approved',
-          label: 'Approved',
-          count: requests.filter(r => r.status === 'APPROVED').length
-        },
-        {
-          key: 'fulfilled',
-          label: 'Fulfilled',
-          count: requests.filter(r => r.status === 'FULFILLED').length
-        },
-        {
-          key: 'denied',
-          label: 'Denied',
-          count: requests.filter(r => r.status === 'DENIED').length
-        }
+        { key: 'all',       label: 'All Requests', count: requestsStore.requests.length },
+        { key: 'pending',   label: 'Pending',      count: counts.PENDING   || 0 },
+        { key: 'approved',  label: 'Approved',     count: counts.APPROVED  || 0 },
+        { key: 'fulfilled', label: 'Fulfilled',    count: counts.FULFILLED || 0 },
+        { key: 'denied',    label: 'Denied',       count: counts.DENIED    || 0 },
       ]
     })
 
     const filteredRequests = computed(() => {
-      if (activeFilter.value === 'all') {
-        return requestsStore.requests
-      }
+      if (activeFilter.value === 'all') return requestsStore.requests
       return requestsStore.requests.filter(
         request => request.status === activeFilter.value.toUpperCase()
       )
     })
-
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
-    }
-
-    const getStatusClasses = (status) => {
-      const classes = {
-        'PENDING': 'bg-yellow-900 text-yellow-200',
-        'APPROVED': 'bg-green-900 text-green-200',
-        'FULFILLED': 'bg-blue-900 text-blue-200',
-        'DENIED': 'bg-red-900 text-red-200'
-      }
-      return classes[status] || 'bg-gray-600 text-gray-200'
-    }
 
     onMounted(async () => {
       await requestsStore.fetchRequests()
@@ -193,8 +154,8 @@ export default {
       activeFilter,
       filters,
       filteredRequests,
+      getStatusClasses,
       formatDate,
-      getStatusClasses
     }
   }
 }

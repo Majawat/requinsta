@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-// Views
 import Dashboard from '../views/Dashboard.vue'
 import Browse from '../views/Browse.vue'
 import MyRequests from '../views/MyRequests.vue'
@@ -46,27 +45,24 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard for authentication
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  
-  // Initialize auth if not done yet
+
   if (!authStore.initialized) {
     await authStore.initAuth()
   }
-  
-  // Check if route requires authentication
+
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    // App.vue shows the login form when not authenticated; cancel navigation
+    next(false)
+    return
+  }
+
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
     next('/')
     return
   }
-  
-  // Check if route requires admin access
-  if (to.meta.requiresAdmin && authStore.user?.role.toLowerCase() !== 'admin') {
-    next('/')
-    return
-  }
-  
+
   next()
 })
 

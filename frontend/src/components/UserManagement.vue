@@ -21,11 +21,7 @@
         <select
           v-model="newUser.role"
           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-          <option value="READ_ONLY">Read Only</option>
-          <option value="USER">User</option>
-          <option value="POWER_USER">Power User</option>
-          <option value="MODERATOR">Moderator</option>
-          <option value="ADMIN">Admin</option>
+          <option v-for="role in ROLES" :key="role.value" :value="role.value">{{ role.label }}</option>
         </select>
         <button
           type="submit"
@@ -55,11 +51,7 @@
             :value="user.role"
             @change="updateUserRole(user.id, $event.target.value)"
             class="text-xs bg-gray-600 border border-gray-500 rounded px-2 py-1 text-white">
-            <option value="READ_ONLY">Read Only</option>
-            <option value="USER">User</option>
-            <option value="POWER_USER">Power User</option>
-            <option value="MODERATOR">Moderator</option>
-            <option value="ADMIN">Admin</option>
+            <option v-for="role in ROLES" :key="role.value" :value="role.value">{{ role.label }}</option>
           </select>
           <button
             @click="deleteUser(user.id)"
@@ -74,6 +66,15 @@
 
 <script>
 import axios from "axios";
+import { API_URL } from "../utils/api";
+
+const ROLES = [
+  { value: "READ_ONLY", label: "Read Only" },
+  { value: "USER", label: "User" },
+  { value: "POWER_USER", label: "Power User" },
+  { value: "MODERATOR", label: "Moderator" },
+  { value: "ADMIN", label: "Admin" },
+]
 
 export default {
   name: "UserManagement",
@@ -87,21 +88,17 @@ export default {
         password: "",
         role: "USER",
       },
+      ROLES,
     };
   },
   async mounted() {
     await this.fetchUsers();
   },
   methods: {
-    /**
-     * Fetches all users from admin API and updates component state
-     * @async
-     * @returns {Promise<void>}
-     */
     async fetchUsers() {
       this.loading = true;
       try {
-        const response = await axios.get(`http://${window.location.hostname}:8000/api/v1/admin/users`);
+        const response = await axios.get(`${API_URL}/admin/users`);
         this.users = response.data;
       } catch (error) {
         console.error("Failed to fetch users:", error);
@@ -110,17 +107,12 @@ export default {
       }
     },
 
-    /**
-     * Creates a new user with provided form data and refreshes users list
-     * @async
-     * @returns {Promise<void>}
-     */
     async addUser() {
       this.adding = true;
       try {
-        await axios.post(`http://${window.location.hostname}:8000/api/v1/admin/users`, this.newUser);
+        const { data: newUser } = await axios.post(`${API_URL}/admin/users`, this.newUser);
+        this.users.push(newUser);
         this.newUser = { email: "", password: "", role: "USER" };
-        await this.fetchUsers();
       } catch (error) {
         console.error("Failed to add user:", error);
         alert(error.response?.data?.detail || "Failed to add user");
@@ -129,36 +121,25 @@ export default {
       }
     },
 
-    /**
-     * Updates user role via API and refreshes users list
-     * @async
-     * @param {number|string} userId - The ID of the user to update
-     * @param {string} newRole - The new role to assign
-     * @returns {Promise<void>}
-     */
     async updateUserRole(userId, newRole) {
       try {
-        await axios.patch(`http://${window.location.hostname}:8000/api/v1/admin/users/${userId}/role`, {
-          role: newRole,
-        });
-        await this.fetchUsers();
+        const { data: updated } = await axios.patch(
+          `${API_URL}/admin/users/${userId}/role`,
+          { role: newRole }
+        );
+        const idx = this.users.findIndex(u => u.id === userId);
+        if (idx !== -1) this.users[idx] = updated;
       } catch (error) {
         console.error("Failed to update user role:", error);
       }
     },
 
-    /**
-     * Deletes user after confirmation prompt and refreshes users list
-     * @async
-     * @param {number|string} userId - The ID of the user to delete
-     * @returns {Promise<void>}
-     */
     async deleteUser(userId) {
       if (!confirm("Are you sure you want to delete this user?")) return;
 
       try {
-        await axios.delete(`http://${window.location.hostname}:8000/api/v1/admin/users/${userId}`);
-        await this.fetchUsers();
+        await axios.delete(`${API_URL}/admin/users/${userId}`);
+        this.users = this.users.filter(u => u.id !== userId);
       } catch (error) {
         console.error("Failed to delete user:", error);
         alert(error.response?.data?.detail || "Failed to delete user");

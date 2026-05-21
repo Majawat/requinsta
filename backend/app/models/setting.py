@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
-
-Base = declarative_base()
+from sqlalchemy.sql import func
+from app.models import Base
 
 
 class Setting(Base):
@@ -13,8 +11,8 @@ class Setting(Base):
     value = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
     is_secret = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     def __repr__(self):
         return f"<Setting(key='{self.key}', value={'***' if self.is_secret else self.value})>"

@@ -21,7 +21,7 @@
             @keyup.enter="performSearch"
           />
         </div>
-        
+
         <div>
           <label for="mediaType" class="block text-sm font-medium text-gray-300">Media Type</label>
           <select
@@ -30,13 +30,7 @@
             class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">All Types</option>
-            <option value="book">Book</option>
-            <option value="audiobook">Audiobook</option>
-            <option value="movie">Movie</option>
-            <option value="tv_show">TV Show</option>
-            <option value="music">Music</option>
-            <option value="comic">Comic</option>
-            <option value="other">Other</option>
+            <option v-for="type in MEDIA_TYPES" :key="type.value" :value="type.value">{{ type.label }}</option>
           </select>
         </div>
 
@@ -56,6 +50,11 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Success message -->
+    <div v-if="successMessage" class="bg-green-900 border border-green-700 p-4 rounded-lg">
+      <p class="text-green-200">{{ successMessage }}</p>
     </div>
 
     <!-- Search results -->
@@ -140,6 +139,16 @@ import { useRequestsStore } from '../stores/requests'
 import { useMetadataStore } from '../stores/metadata'
 import RequestForm from '../components/RequestForm.vue'
 
+const MEDIA_TYPES = [
+  { value: 'book', label: 'Book' },
+  { value: 'audiobook', label: 'Audiobook' },
+  { value: 'movie', label: 'Movie' },
+  { value: 'tv_show', label: 'TV Show' },
+  { value: 'music', label: 'Music' },
+  { value: 'comic', label: 'Comic' },
+  { value: 'other', label: 'Other' },
+]
+
 export default {
   name: 'Browse',
   components: {
@@ -148,21 +157,22 @@ export default {
   setup() {
     const requestsStore = useRequestsStore()
     const metadataStore = useMetadataStore()
-    
+
     const searchQuery = ref('')
     const selectedMediaType = ref('')
     const hasSearched = ref(false)
+    const successMessage = ref('')
 
     const performSearch = async () => {
       if (!searchQuery.value.trim()) return
-      
+
       hasSearched.value = true
-      
+
       const result = await metadataStore.searchMetadata(
         searchQuery.value,
         selectedMediaType.value || 'book'
       )
-      
+
       if (!result.success) {
         console.error('Search error:', result.error)
       }
@@ -173,47 +183,57 @@ export default {
       selectedMediaType.value = ''
       metadataStore.clearResults()
       hasSearched.value = false
+      successMessage.value = ''
+    }
+
+    const showSuccess = (msg) => {
+      successMessage.value = msg
+      setTimeout(() => { successMessage.value = '' }, 3000)
     }
 
     const requestMedia = async (mediaItem) => {
       try {
-        const requestDescription = `${mediaItem.description}
+        const requestDescription = [
+          mediaItem.description,
+          mediaItem.author && `Author: ${mediaItem.author}`,
+          mediaItem.year && `Year: ${mediaItem.year}`,
+          mediaItem.genre && `Genre: ${mediaItem.genre}`,
+          `Source: ${mediaItem.provider}`,
+        ].filter(Boolean).join('\n')
 
-Author: ${mediaItem.author}
-Year: ${mediaItem.year}
-Genre: ${mediaItem.genre}
-Source: ${mediaItem.provider}`
-
-        await requestsStore.createRequest({
+        const result = await requestsStore.createRequest({
           title: mediaItem.title,
           description: requestDescription,
-          media_type: mediaItem.media_type
+          media_type: mediaItem.media_type,
         })
-        
-        // Show success message or redirect
-        alert('Request submitted successfully!')
+
+        if (result.success) {
+          showSuccess('Request submitted successfully!')
+        } else {
+          console.error('Request error:', result.error)
+        }
       } catch (error) {
         console.error('Request error:', error)
-        alert('Failed to submit request. Please try again.')
       }
     }
 
     const handleRequestCreated = () => {
-      // Handle successful manual request creation
-      console.log('Manual request created successfully')
+      showSuccess('Request created successfully!')
     }
 
     return {
+      MEDIA_TYPES,
       searchQuery,
       selectedMediaType,
+      hasSearched,
+      successMessage,
       searchResults: computed(() => metadataStore.searchResults),
       searching: computed(() => metadataStore.isLoading),
-      hasSearched,
       error: computed(() => metadataStore.error),
       performSearch,
       clearSearch,
       requestMedia,
-      handleRequestCreated
+      handleRequestCreated,
     }
   }
 }

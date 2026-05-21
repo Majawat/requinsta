@@ -67,101 +67,10 @@
       </div>
     </div>
 
-    <!-- Preferences -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Preferences</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">
-            Email Notifications
-          </label>
-          <div class="space-y-2">
-            <label class="flex items-center">
-              <input
-                type="checkbox"
-                v-model="preferences.emailOnApproval"
-                class="rounded bg-gray-700 border-gray-600 text-blue-600"
-              />
-              <span class="ml-2 text-sm text-gray-300">Request approval notifications</span>
-            </label>
-            <label class="flex items-center">
-              <input
-                type="checkbox"
-                v-model="preferences.emailOnFulfillment"
-                class="rounded bg-gray-700 border-gray-600 text-blue-600"
-              />
-              <span class="ml-2 text-sm text-gray-300">Request fulfillment notifications</span>
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">
-            Default Media Type
-          </label>
-          <select
-            v-model="preferences.defaultMediaType"
-            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-          >
-            <option value="">No preference</option>
-            <option value="book">Book</option>
-            <option value="audiobook">Audiobook</option>
-            <option value="movie">Movie</option>
-            <option value="tv_show">TV Show</option>
-            <option value="music">Music</option>
-            <option value="comic">Comic</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        <div class="pt-4">
-          <button
-            @click="savePreferences"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-          >
-            Save Preferences
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Security -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
       <h2 class="text-lg font-medium text-white mb-4">Security</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-300 mb-2">
-            Change Password
-          </label>
-          <div class="space-y-3">
-            <input
-              type="password"
-              v-model="passwordForm.currentPassword"
-              placeholder="Current password"
-              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400"
-            />
-            <input
-              type="password"
-              v-model="passwordForm.newPassword"
-              placeholder="New password"
-              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400"
-            />
-            <input
-              type="password"
-              v-model="passwordForm.confirmPassword"
-              placeholder="Confirm new password"
-              class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400"
-            />
-            <button
-              @click="changePassword"
-              :disabled="!isPasswordFormValid"
-              class="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
-            >
-              Change Password
-            </button>
-          </div>
-        </div>
-      </div>
+      <p class="text-gray-400 text-sm">Password change and additional security features are coming soon.</p>
     </div>
 
     <!-- Account Actions -->
@@ -180,9 +89,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRequestsStore } from '../stores/requests'
+import { formatDate } from '../utils/requestUtils'
 
 export default {
   name: 'Profile',
@@ -190,98 +100,33 @@ export default {
     const authStore = useAuthStore()
     const requestsStore = useRequestsStore()
 
-    const preferences = reactive({
-      emailOnApproval: true,
-      emailOnFulfillment: true,
-      defaultMediaType: ''
-    })
-
-    const passwordForm = reactive({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
-
-    const userRequests = computed(() => 
+    const userRequests = computed(() =>
       requestsStore.requests.filter(req => req.user_id === authStore.user?.id)
     )
 
-    const pendingCount = computed(() => 
+    const pendingCount = computed(() =>
       userRequests.value.filter(req => req.status === 'PENDING').length
     )
 
-    const approvedCount = computed(() => 
+    const approvedCount = computed(() =>
       userRequests.value.filter(req => req.status === 'APPROVED').length
     )
 
-    const fulfilledCount = computed(() => 
+    const fulfilledCount = computed(() =>
       userRequests.value.filter(req => req.status === 'FULFILLED').length
     )
 
-    const isPasswordFormValid = computed(() => {
-      return passwordForm.currentPassword && 
-             passwordForm.newPassword && 
-             passwordForm.confirmPassword &&
-             passwordForm.newPassword === passwordForm.confirmPassword &&
-             passwordForm.newPassword.length >= 8
-    })
-
-    const formatDate = (dateString) => {
-      if (!dateString) return 'Unknown'
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    }
-
-    const savePreferences = async () => {
-      try {
-        // In a real app, this would save to backend
-        console.log('Saving preferences:', preferences)
-        alert('Preferences saved successfully!')
-      } catch (error) {
-        console.error('Error saving preferences:', error)
-        alert('Failed to save preferences. Please try again.')
-      }
-    }
-
-    const changePassword = async () => {
-      try {
-        // In a real app, this would call the backend API
-        console.log('Changing password...')
-        alert('Password changed successfully!')
-        
-        // Clear form
-        passwordForm.currentPassword = ''
-        passwordForm.newPassword = ''
-        passwordForm.confirmPassword = ''
-      } catch (error) {
-        console.error('Error changing password:', error)
-        alert('Failed to change password. Please try again.')
-      }
-    }
-
     onMounted(async () => {
       await requestsStore.fetchRequests()
-      
-      // In a real app, load user preferences from backend
-      // For now, use defaults
     })
 
     return {
       authStore,
-      requestsStore,
-      preferences,
-      passwordForm,
       userRequests,
       pendingCount,
       approvedCount,
       fulfilledCount,
-      isPasswordFormValid,
       formatDate,
-      savePreferences,
-      changePassword
     }
   }
 }

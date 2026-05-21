@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel, EmailStr
+
 from app.models import get_db
 from app.models.request import Request, RequestStatus
 from app.models.user import User, UserRole
-from app.core.security import get_current_user, get_password_hash
+from app.core.security import get_password_hash
+from app.api.v1.deps import get_admin_user
 
 router = APIRouter()
-security = HTTPBearer()
 
 
 class UpdateRequestStatus(BaseModel):
@@ -32,29 +32,19 @@ class UserResponse(BaseModel):
     role: UserRole
 
 
-def get_admin_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
-) -> User:
-    user = get_current_user(db, credentials.credentials)
-    if not user or user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-
-
 @router.get("/users", response_model=List[UserResponse])
 async def get_all_users(
-    db: Session = Depends(get_db), admin_user: User = Depends(get_admin_user)
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
 ):
-    users = db.query(User).all()
-    return users
+    return db.query(User).all()
 
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(
     user_data: CreateUser,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(get_admin_user),
+    _: User = Depends(get_admin_user),
 ):
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -93,7 +83,7 @@ async def update_user_role(
     user_id: int,
     role_data: UpdateUserRole,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(get_admin_user),
+    _: User = Depends(get_admin_user),
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -110,7 +100,7 @@ async def update_request_status(
     request_id: int,
     status_data: UpdateRequestStatus,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(get_admin_user),
+    _: User = Depends(get_admin_user),
 ):
     request = db.query(Request).filter(Request.id == request_id).first()
     if not request:

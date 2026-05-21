@@ -15,7 +15,6 @@
 </template>
 
 <script>
-import { onMounted } from "vue";
 import { useAuthStore } from "./stores/auth";
 import LoginForm from "./components/LoginForm.vue";
 import Layout from "./components/layout/Layout.vue";
@@ -28,14 +27,7 @@ export default {
   },
   setup() {
     const authStore = useAuthStore();
-
-    onMounted(async () => {
-      await authStore.initAuth();
-    });
-
-    return {
-      authStore,
-    };
+    return { authStore };
   },
 };
 </script>

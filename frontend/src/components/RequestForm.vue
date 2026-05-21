@@ -35,13 +35,7 @@
           @change="searchMetadata"
           required
           class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-          <option value="book">Book</option>
-          <option value="audiobook">Audiobook</option>
-          <option value="movie">Movie</option>
-          <option value="tv_show">TV Show</option>
-          <option value="music">Music</option>
-          <option value="comic">Comic</option>
-          <option value="other">Other</option>
+          <option v-for="type in MEDIA_TYPES" :key="type.value" :value="type.value">{{ type.label }}</option>
         </select>
       </div>
 
@@ -70,6 +64,17 @@
 <script>
 import { useRequestsStore } from "../stores/requests";
 import axios from "axios";
+import { API_URL } from "../utils/api";
+
+const MEDIA_TYPES = [
+  { value: "book", label: "Book" },
+  { value: "audiobook", label: "Audiobook" },
+  { value: "movie", label: "Movie" },
+  { value: "tv_show", label: "TV Show" },
+  { value: "music", label: "Music" },
+  { value: "comic", label: "Comic" },
+  { value: "other", label: "Other" },
+]
 
 export default {
   name: "RequestForm",
@@ -82,14 +87,10 @@ export default {
       error: "",
       metadataResults: [],
       searchTimeout: null,
+      MEDIA_TYPES,
     };
   },
   methods: {
-    /**
-     * Handles form submission to create a new request, emits success event
-     * @async
-     * @returns {Promise<void>}
-     */
     async handleSubmit() {
       this.loading = true;
       this.error = "";
@@ -117,10 +118,6 @@ export default {
       }
     },
 
-    /**
-     * Debounced search for metadata suggestions based on title and media type
-     * @returns {void}
-     */
     searchMetadata() {
       if (this.searchTimeout) {
         clearTimeout(this.searchTimeout);
@@ -133,15 +130,10 @@ export default {
         }
 
         try {
-          const response = await axios.get(`http://${window.location.hostname}:8000/api/v1/metadata/search`, {
+          const response = await axios.get(`${API_URL}/metadata/search`, {
             params: { query: this.title, media_type: this.mediaType },
           });
-
-          // Flatten results from all providers
-          this.metadataResults = [];
-          Object.values(response.data).forEach((providerResults) => {
-            this.metadataResults.push(...providerResults.slice(0, 3)); // Limit per provider
-          });
+          this.metadataResults = response.data.slice(0, 9);
         } catch (error) {
           console.error("Metadata search error:", error);
           this.metadataResults = [];
@@ -149,13 +141,6 @@ export default {
       }, 300);
     },
 
-    /**
-     * Selects metadata from search results and populates form fields
-     * @param {Object} metadata - The selected metadata object
-     * @param {string} metadata.title - The title of the media
-     * @param {string} [metadata.description] - Optional description
-     * @returns {void}
-     */
     selectMetadata(metadata) {
       this.title = metadata.title;
       if (metadata.description && !this.description) {

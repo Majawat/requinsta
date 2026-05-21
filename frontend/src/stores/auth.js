@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-
-const API_URL = `http://${window.location.hostname}:8000/api/v1`;
+import { API_URL } from "../utils/api";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -11,15 +10,11 @@ export const useAuthStore = defineStore("auth", {
     initialized: false,
   }),
 
+  getters: {
+    isAdmin: (state) => state.user?.role?.toUpperCase() === "ADMIN",
+  },
+
   actions: {
-    /**
-     * Registers a new user with email and password
-     * @async
-     * @param {string} email - User's email address
-     * @param {string} password - User's password
-     * @returns {Promise<Object>} Result object with success status and user data or error
-     * @throws {Error} If the API request fails
-     */
     async register(email, password) {
       try {
         const response = await axios.post(`${API_URL}/auth/register`, {
@@ -32,14 +27,6 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    /**
-     * Authenticates user with email and password, sets token and fetches user data
-     * @async
-     * @param {string} email - User's email address
-     * @param {string} password - User's password
-     * @returns {Promise<Object>} Result object with success status and error if applicable
-     * @throws {Error} If the API request fails
-     */
     async login(email, password) {
       try {
         const response = await axios.post(`${API_URL}/auth/login`, {
@@ -58,12 +45,6 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    /**
-     * Fetches current user data from API using stored token
-     * @async
-     * @returns {Promise<void>}
-     * @throws {Error} If the API request fails, triggers logout
-     */
     async fetchUser() {
       try {
         const response = await axios.get(`${API_URL}/auth/me`);
@@ -83,12 +64,8 @@ export const useAuthStore = defineStore("auth", {
       delete axios.defaults.headers.common["Authorization"];
     },
 
-    /**
-     * Initializes authentication by setting token header and fetching user data if token exists
-     * @async
-     * @returns {Promise<void>}
-     */
     async initAuth() {
+      if (this.initialized) return;
       if (this.token) {
         axios.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
         await this.fetchUser();

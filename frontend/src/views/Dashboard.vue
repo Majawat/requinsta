@@ -8,7 +8,7 @@
 
     <!-- Admin notification -->
     <div
-      v-if="authStore.user?.role.toLowerCase() === 'admin'"
+      v-if="authStore.isAdmin"
       class="bg-yellow-900 border border-yellow-700 p-4 rounded-lg"
     >
       <p class="text-yellow-200 font-medium">Admin Mode Active</p>
@@ -78,7 +78,7 @@
           </svg>
           <span class="text-gray-200">Browse & Search Media</span>
         </router-link>
-        
+
         <router-link
           to="/my-requests"
           class="flex items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
@@ -95,12 +95,12 @@
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
       <h2 class="text-lg font-medium text-white mb-4">Recent Requests</h2>
       <div v-if="requestsStore.loading" class="text-gray-400">Loading...</div>
-      <div v-else-if="recentRequests.length === 0" class="text-gray-400">
+      <div v-else-if="requestsStore.recentRequests.length === 0" class="text-gray-400">
         No recent requests
       </div>
       <div v-else class="space-y-3">
         <div
-          v-for="request in recentRequests"
+          v-for="request in requestsStore.recentRequests"
           :key="request.id"
           class="border border-gray-600 rounded p-4 bg-gray-700"
         >
@@ -117,12 +117,7 @@
                 </span>
               </div>
             </div>
-            <span
-              :class="[
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                getStatusClasses(request.status)
-              ]"
-            >
+            <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusClasses(request.status)]">
               {{ request.status }}
             </span>
           </div>
@@ -136,6 +131,7 @@
 import { computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRequestsStore } from '../stores/requests'
+import { getStatusClasses, formatDate } from '../utils/requestUtils'
 
 export default {
   name: 'Dashboard',
@@ -144,33 +140,12 @@ export default {
     const requestsStore = useRequestsStore()
 
     const totalRequests = computed(() => requestsStore.requests.length)
-    const pendingRequests = computed(() => 
+    const pendingRequests = computed(() =>
       requestsStore.requests.filter(req => req.status === 'PENDING').length
     )
-    const approvedRequests = computed(() => 
+    const approvedRequests = computed(() =>
       requestsStore.requests.filter(req => req.status === 'APPROVED').length
     )
-
-    const recentRequests = computed(() => 
-      requestsStore.requests
-        .slice()
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 5)
-    )
-
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString()
-    }
-
-    const getStatusClasses = (status) => {
-      const classes = {
-        'PENDING': 'bg-yellow-900 text-yellow-200',
-        'APPROVED': 'bg-green-900 text-green-200',
-        'FULFILLED': 'bg-blue-900 text-blue-200',
-        'DENIED': 'bg-red-900 text-red-200'
-      }
-      return classes[status] || 'bg-gray-600 text-gray-200'
-    }
 
     onMounted(async () => {
       if (authStore.isAuthenticated) {
@@ -184,9 +159,8 @@ export default {
       totalRequests,
       pendingRequests,
       approvedRequests,
-      recentRequests,
+      getStatusClasses,
       formatDate,
-      getStatusClasses
     }
   }
 }

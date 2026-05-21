@@ -110,7 +110,7 @@
       <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
         <h2 class="text-lg font-medium text-white mb-4">Recent Activity</h2>
         <div class="space-y-3">
-          <div v-for="request in recentRequests" :key="request.id" class="flex items-center justify-between p-3 bg-gray-700 rounded">
+          <div v-for="request in requestsStore.recentRequests" :key="request.id" class="flex items-center justify-between p-3 bg-gray-700 rounded">
             <div>
               <p class="text-white font-medium">{{ request.title }}</p>
               <p class="text-sm text-gray-400">{{ request.description }}</p>
@@ -130,7 +130,10 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import { useRequestsStore } from '../stores/requests'
+import { getStatusClasses, formatDate } from '../utils/requestUtils'
+import { API_URL } from '../utils/api'
 import AdminPanel from '../components/AdminPanel.vue'
 import UserManagement from '../components/UserManagement.vue'
 import AdminSettings from '../components/AdminSettings.vue'
@@ -145,7 +148,7 @@ export default {
   setup() {
     const requestsStore = useRequestsStore()
     const activeTab = ref('requests')
-    const totalUsers = ref(0) // This would come from a users store
+    const totalUsers = ref(0)
 
     const tabs = [
       { key: 'requests', label: 'Requests' },
@@ -154,39 +157,22 @@ export default {
       { key: 'stats', label: 'Statistics' }
     ]
 
-    const pendingRequests = computed(() => 
+    const pendingRequests = computed(() =>
       requestsStore.requests.filter(req => req.status === 'PENDING').length
     )
 
-    const fulfilledRequests = computed(() => 
+    const fulfilledRequests = computed(() =>
       requestsStore.requests.filter(req => req.status === 'FULFILLED').length
     )
 
-    const recentRequests = computed(() => 
-      requestsStore.requests
-        .slice()
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 5)
-    )
-
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleDateString()
-    }
-
-    const getStatusClasses = (status) => {
-      const classes = {
-        'PENDING': 'bg-yellow-900 text-yellow-200',
-        'APPROVED': 'bg-green-900 text-green-200',
-        'FULFILLED': 'bg-blue-900 text-blue-200',
-        'DENIED': 'bg-red-900 text-red-200'
-      }
-      return classes[status] || 'bg-gray-600 text-gray-200'
-    }
-
     onMounted(async () => {
       await requestsStore.fetchRequests()
-      // In a real app, also fetch user count
-      totalUsers.value = 42 // Mock data
+      try {
+        const { data } = await axios.get(`${API_URL}/admin/users`)
+        totalUsers.value = data.length
+      } catch (e) {
+        console.error('Failed to fetch user count:', e)
+      }
     })
 
     return {
@@ -196,9 +182,8 @@ export default {
       totalUsers,
       pendingRequests,
       fulfilledRequests,
-      recentRequests,
+      getStatusClasses,
       formatDate,
-      getStatusClasses
     }
   }
 }
