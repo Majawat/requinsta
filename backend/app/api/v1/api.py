@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     settings,
     media_managers,
     notifications,
+    plugins,
 )
 
 api_router = APIRouter()
@@ -23,3 +24,4 @@ api_router.include_router(
 api_router.include_router(
     notifications.router, prefix="/notifications", tags=["notifications"]
 )
+api_router.include_router(plugins.router, prefix="/plugins", tags=["plugins"])

@@ -1,20 +1,16 @@
 import asyncio
 from typing import Dict, List
 from app.plugins.base import MetadataProvider, MediaMetadata
-from app.plugins.openlibrary import OpenLibraryProvider
-from app.plugins.tmdb import TMDBProvider
-from app.plugins.hardcover import HardcoverProvider
+from app.plugins.descriptor import METADATA_PROVIDER
+from app.plugins.discovery import discover
 
 
 class PluginManager:
     def __init__(self):
         self.providers: Dict[str, MetadataProvider] = {}
-        self._register_default_plugins()
-
-    def _register_default_plugins(self):
-        self.register_provider(HardcoverProvider())
-        self.register_provider(OpenLibraryProvider())
-        self.register_provider(TMDBProvider())
+        for d in discover():
+            if d.plugin_type == METADATA_PROVIDER:
+                self.register_provider(d.obj)
 
     def register_provider(self, provider: MetadataProvider):
         self.providers[provider.name] = provider

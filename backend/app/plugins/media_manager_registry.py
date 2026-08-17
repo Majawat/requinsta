@@ -3,7 +3,8 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.plugins.base import MediaManager
-from app.plugins.readarr import ReadarrManager
+from app.plugins.descriptor import MEDIA_MANAGER
+from app.plugins.discovery import discover
 from app.models.media_manager import MediaManagerInstance
 
 
@@ -13,10 +14,9 @@ class MediaManagerRegistry:
 
     def __init__(self):
         self.adapters: Dict[str, MediaManager] = {}
-        self._register_default_adapters()
-
-    def _register_default_adapters(self):
-        self.register_adapter(ReadarrManager())
+        for d in discover():
+            if d.plugin_type == MEDIA_MANAGER:
+                self.register_adapter(d.obj)
 
     def register_adapter(self, adapter: MediaManager):
         self.adapters[adapter.service] = adapter
