@@ -34,6 +34,29 @@
           </p>
         </div>
 
+        <!-- Hardcover API Token -->
+        <div>
+          <label for="hardcover-key" class="block text-sm font-medium text-gray-300">Hardcover API Token</label>
+          <div class="mt-1 flex">
+            <input
+              v-model="hardcoverToken"
+              :type="showHardcoverKey ? 'text' : 'password'"
+              id="hardcover-key"
+              placeholder="Enter Hardcover API token for book metadata"
+              class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-l-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              @click="showHardcoverKey = !showHardcoverKey"
+              class="px-3 py-2 bg-gray-600 border border-gray-600 border-l-0 rounded-r-md text-gray-300 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {{ showHardcoverKey ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <p class="mt-1 text-xs text-gray-400">
+            Get your token from <a href="https://hardcover.app/account/api" target="_blank" class="text-blue-400 hover:text-blue-300">Hardcover → Account → API</a>
+          </p>
+        </div>
+
         <!-- Save button -->
         <div class="flex justify-end">
           <button
@@ -137,6 +160,8 @@ export default {
     const settings = ref([])
     const tmdbApiKey = ref('')
     const showTmdbKey = ref(false)
+    const hardcoverToken = ref('')
+    const showHardcoverKey = ref(false)
     const saving = ref(false)
     const loading = ref(false)
     const message = ref('')
@@ -166,6 +191,10 @@ export default {
         const tmdbSetting = settings.value.find(s => s.key === 'TMDB_API_KEY')
         if (tmdbSetting) {
           tmdbApiKey.value = tmdbSetting.value === '***' ? '' : tmdbSetting.value
+        }
+        const hcSetting = settings.value.find(s => s.key === 'HARDCOVER_API_TOKEN')
+        if (hcSetting) {
+          hardcoverToken.value = hcSetting.value === '***' ? '' : hcSetting.value
         }
 
         const val = (key) => {
@@ -212,6 +241,16 @@ export default {
           }
         }
 
+        if (hardcoverToken.value.trim()) {
+          await upsertSetting(
+            'HARDCOVER_API_TOKEN',
+            hardcoverToken.value.trim(),
+            'Hardcover API token for book metadata',
+            true
+          )
+        }
+
+        await fetchSettings()
         showMessage('Settings saved successfully!')
       } catch (error) {
         console.error('Error saving settings:', error)
@@ -289,6 +328,8 @@ export default {
       settings,
       tmdbApiKey,
       showTmdbKey,
+      hardcoverToken,
+      showHardcoverKey,
       saving,
       loading,
       message,

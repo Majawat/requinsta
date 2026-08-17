@@ -3,6 +3,7 @@ from typing import Dict, List
 from app.plugins.base import MetadataProvider, MediaMetadata
 from app.plugins.openlibrary import OpenLibraryProvider
 from app.plugins.tmdb import TMDBProvider
+from app.plugins.hardcover import HardcoverProvider
 
 
 class PluginManager:
@@ -11,6 +12,7 @@ class PluginManager:
         self._register_default_plugins()
 
     def _register_default_plugins(self):
+        self.register_provider(HardcoverProvider())
         self.register_provider(OpenLibraryProvider())
         self.register_provider(TMDBProvider())
 
