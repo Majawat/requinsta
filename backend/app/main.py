@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
-from app.models import Base, engine
 
-Base.metadata.create_all(bind=engine)
+# Schema is owned by Alembic migrations (run `alembic upgrade head` on startup),
+# not Base.metadata.create_all — so schema changes are versioned and reviewable.
 
 app = FastAPI(
     title="Requinsta",

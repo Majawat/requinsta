@@ -61,8 +61,9 @@ postgres_data/
 *.log
 docker-compose.override.yml
 
-# Alembic
-backend/alembic/versions/*.py
+# Alembic — migration scripts are versioned schema history and MUST be committed.
+# Only ignore the compiled bytecode.
+backend/alembic/versions/__pycache__/
 
 # Build outputs
 frontend/dist/
