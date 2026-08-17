@@ -10,6 +10,7 @@ Base = declarative_base()
 from app.models.user import User
 from app.models.request import Request
 from app.models.setting import Setting
+from app.models.media_manager import MediaManagerInstance
 
 
 def get_db():

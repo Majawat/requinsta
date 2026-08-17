@@ -193,18 +193,18 @@ export default {
 
     const requestMedia = async (mediaItem) => {
       try {
-        const requestDescription = [
-          mediaItem.description,
-          mediaItem.author && `Author: ${mediaItem.author}`,
-          mediaItem.year && `Year: ${mediaItem.year}`,
-          mediaItem.genre && `Genre: ${mediaItem.genre}`,
-          `Source: ${mediaItem.provider}`,
-        ].filter(Boolean).join('\n')
-
+        // Carry the provider's structured identity through so an admin can later
+        // route this to a media manager. description stays the human-readable blurb
+        // only (not a dumping ground for fields that now have real columns).
         const result = await requestsStore.createRequest({
           title: mediaItem.title,
-          description: requestDescription,
+          description: mediaItem.description || null,
           media_type: mediaItem.media_type,
+          external_id: mediaItem.id || null,
+          provider: mediaItem.provider || null,
+          cover_url: mediaItem.cover_url || null,
+          author: mediaItem.author || null,
+          year: mediaItem.year || null,
         })
 
         if (result.success) {
