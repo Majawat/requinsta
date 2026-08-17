@@ -46,6 +46,11 @@
       <MediaManagers />
     </div>
 
+    <!-- Plugins Tab -->
+    <div v-if="activeTab === 'plugins'" class="space-y-4">
+      <Plugins />
+    </div>
+
     <!-- Settings Tab -->
     <div v-if="activeTab === 'settings'" class="space-y-4">
       <AdminSettings />
@@ -143,6 +148,7 @@ import AdminPanel from '../components/AdminPanel.vue'
 import UserManagement from '../components/UserManagement.vue'
 import AdminSettings from '../components/AdminSettings.vue'
 import MediaManagers from '../components/MediaManagers.vue'
+import Plugins from '../components/Plugins.vue'
 
 export default {
   name: 'Admin',
@@ -150,7 +156,8 @@ export default {
     AdminPanel,
     UserManagement,
     AdminSettings,
-    MediaManagers
+    MediaManagers,
+    Plugins
   },
   setup() {
     const requestsStore = useRequestsStore()
@@ -161,6 +168,7 @@ export default {
       { key: 'requests', label: 'Requests' },
       { key: 'users', label: 'Users' },
       { key: 'managers', label: 'Media Managers' },
+      { key: 'plugins', label: 'Plugins' },
       { key: 'settings', label: 'Settings' },
       { key: 'stats', label: 'Statistics' }
     ]
