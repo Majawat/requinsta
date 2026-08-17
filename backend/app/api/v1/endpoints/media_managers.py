@@ -83,6 +83,20 @@ def list_services(_: User = Depends(get_admin_user)):
     return media_manager_registry.available_services()
 
 
+@router.get("/eligible", response_model=List[InstanceResponse])
+def list_eligible(
+    media_type: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Enabled instances that can fulfill a given media type — used to populate
+    the approve-time instance picker."""
+    return [
+        _to_response(i)
+        for i in media_manager_registry.instances_for_media_type(db, media_type)
+    ]
+
+
 @router.get("/", response_model=List[InstanceResponse])
 def list_instances(
     db: Session = Depends(get_db),
