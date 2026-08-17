@@ -40,5 +40,13 @@ class Request(Base):
     author = Column(String, nullable=True)
     year = Column(Integer, nullable=True)
 
+    # Fulfillment routing (Phase C). Set when an approved request is pushed to a
+    # media manager. Soft reference (no FK) so deleting an instance doesn't touch
+    # history. All nullable — an unrouted/manual request has none of these.
+    target_instance_id = Column(Integer, nullable=True)
+    target_service = Column(String, nullable=True)   # e.g. "readarr"
+    external_ref = Column(String, nullable=True)      # id of the item in that manager
+    fulfillment_detail = Column(String, nullable=True)  # last add/push result message
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -38,6 +38,10 @@ class RequestResponse(BaseModel):
     cover_url: Optional[str] = None
     author: Optional[str] = None
     year: Optional[int] = None
+    target_instance_id: Optional[int] = None
+    target_service: Optional[str] = None
+    external_ref: Optional[str] = None
+    fulfillment_detail: Optional[str] = None
 
 
 @router.get("/", response_model=List[RequestResponse])

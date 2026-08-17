@@ -41,6 +41,11 @@
       </div>
     </div>
 
+    <!-- Media Managers Tab -->
+    <div v-if="activeTab === 'managers'" class="space-y-4">
+      <MediaManagers />
+    </div>
+
     <!-- Settings Tab -->
     <div v-if="activeTab === 'settings'" class="space-y-4">
       <AdminSettings />
@@ -137,13 +142,15 @@ import { API_URL } from '../utils/api'
 import AdminPanel from '../components/AdminPanel.vue'
 import UserManagement from '../components/UserManagement.vue'
 import AdminSettings from '../components/AdminSettings.vue'
+import MediaManagers from '../components/MediaManagers.vue'
 
 export default {
   name: 'Admin',
   components: {
     AdminPanel,
     UserManagement,
-    AdminSettings
+    AdminSettings,
+    MediaManagers
   },
   setup() {
     const requestsStore = useRequestsStore()
@@ -153,6 +160,7 @@ export default {
     const tabs = [
       { key: 'requests', label: 'Requests' },
       { key: 'users', label: 'Users' },
+      { key: 'managers', label: 'Media Managers' },
       { key: 'settings', label: 'Settings' },
       { key: 'stats', label: 'Statistics' }
     ]

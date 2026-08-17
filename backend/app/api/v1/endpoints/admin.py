@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 
 from app.models import get_db
@@ -8,12 +8,20 @@ from app.models.request import Request, RequestStatus
 from app.models.user import User, UserRole
 from app.core.security import get_password_hash
 from app.api.v1.deps import get_admin_user
+from app.api.v1.endpoints.requests import RequestResponse
+from app.services.fulfillment import resolve_target_instance, push_to_manager
 
 router = APIRouter()
 
 
 class UpdateRequestStatus(BaseModel):
     status: RequestStatus
+
+
+class ApproveRequest(BaseModel):
+    # Which media-manager instance to push to. Omit to auto-select when exactly
+    # one instance is eligible, or to approve without pushing when none are.
+    instance_id: Optional[int] = None
 
 
 class UpdateUserRole(BaseModel):
@@ -95,7 +103,7 @@ async def update_user_role(
     return user
 
 
-@router.patch("/requests/{request_id}/status")
+@router.patch("/requests/{request_id}/status", response_model=RequestResponse)
 async def update_request_status(
     request_id: int,
     status_data: UpdateRequestStatus,
@@ -109,4 +117,32 @@ async def update_request_status(
     request.status = status_data.status
     db.commit()
     db.refresh(request)
+    return request
+
+
+@router.post("/requests/{request_id}/approve", response_model=RequestResponse)
+async def approve_request(
+    request_id: int,
+    body: ApproveRequest = ApproveRequest(),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Approve a request and, if a media-manager instance is eligible/chosen,
+    push it there. The push is best-effort: its outcome is recorded on the
+    request (fulfillment_detail) but never blocks the approval."""
+    request = db.query(Request).filter(Request.id == request_id).first()
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    instance, error = resolve_target_instance(db, request, body.instance_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+
+    request.status = RequestStatus.APPROVED
+    db.commit()
+    db.refresh(request)
+
+    if instance is not None:
+        await push_to_manager(db, request, instance)
+
     return request
