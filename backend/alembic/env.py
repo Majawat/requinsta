@@ -11,6 +11,7 @@ from app.models import Base
 from app.models.user import User
 from app.models.request import Request
 from app.models.setting import Setting
+from app.models.media_manager import MediaManagerInstance
 from app.core.config import settings
 
 config = context.config
