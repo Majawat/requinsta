@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from app.models import Base
@@ -47,6 +47,8 @@ class Request(Base):
     target_service = Column(String, nullable=True)   # e.g. "readarr"
     external_ref = Column(String, nullable=True)      # id of the item in that manager
     fulfillment_detail = Column(String, nullable=True)  # last add/push result message
+    # Guards against re-notifying if the status is toggled through FULFILLED again.
+    fulfillment_notified = Column(Boolean, nullable=False, default=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

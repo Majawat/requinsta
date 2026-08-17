@@ -10,6 +10,7 @@ from app.core.security import get_password_hash
 from app.api.v1.deps import get_admin_user
 from app.api.v1.endpoints.requests import RequestResponse
 from app.services.fulfillment import resolve_target_instance, push_to_manager
+from app.services.notifications import notify_request_fulfilled
 
 router = APIRouter()
 
@@ -117,6 +118,12 @@ async def update_request_status(
     request.status = status_data.status
     db.commit()
     db.refresh(request)
+
+    # Notify the requester when their item becomes available.
+    if request.status == RequestStatus.FULFILLED:
+        await notify_request_fulfilled(db, request)
+        db.refresh(request)
+
     return request
 
 

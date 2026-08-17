@@ -42,6 +42,7 @@ class RequestResponse(BaseModel):
     target_service: Optional[str] = None
     external_ref: Optional[str] = None
     fulfillment_detail: Optional[str] = None
+    fulfillment_notified: bool = False
 
 
 @router.get("/", response_model=List[RequestResponse])

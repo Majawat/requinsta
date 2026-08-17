@@ -73,3 +73,30 @@ class MediaManager(ABC):
     @abstractmethod
     async def get_status(self, config: Any, external_ref: str) -> FulfillmentResult:
         """Report whether the referenced item is downloaded/available yet."""
+
+
+class NotificationResult(BaseModel):
+    ok: bool
+    message: Optional[str] = None
+
+
+class Notifier(ABC):
+    """Base class for notification channels (email, Discord, ...).
+
+    Configuration is read by the concrete notifier itself (from the settings
+    table), mirroring how metadata providers load their own config. Not
+    configured => is_configured() is False and the notifier is skipped, so the
+    app works fine with no notifier set up."""
+
+    @property
+    @abstractmethod
+    def service(self) -> str:
+        """Key identifying this channel, e.g. "email"."""
+
+    @abstractmethod
+    def is_configured(self) -> bool:
+        """Whether enough config is present to attempt sending."""
+
+    @abstractmethod
+    async def send(self, to: str, subject: str, body: str) -> NotificationResult:
+        """Deliver a message; best-effort, should not raise."""

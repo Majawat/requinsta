@@ -47,6 +47,49 @@
       </div>
     </div>
 
+    <!-- Email Notifications -->
+    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
+      <h3 class="text-lg font-medium text-white mb-1">Email Notifications</h3>
+      <p class="text-sm text-gray-400 mb-4">SMTP server used to email requesters when their request is available.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300">SMTP Host</label>
+          <input v-model="smtp.host" placeholder="smtp.example.com" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300">Port</label>
+          <input v-model="smtp.port" placeholder="587" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300">From Address</label>
+          <input v-model="smtp.from" placeholder="requinsta@example.com" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300">Username</label>
+          <input v-model="smtp.username" placeholder="(optional)" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300">Password</label>
+          <input v-model="smtp.password" type="password" :placeholder="smtp.passwordSet ? '•••••• (unchanged)' : '(optional)'" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        </div>
+        <div class="flex items-end">
+          <label class="inline-flex items-center text-sm text-gray-300">
+            <input type="checkbox" v-model="smtp.useTls" class="mr-2" /> Use STARTTLS
+          </label>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button @click="sendTestEmail" :disabled="testing" class="bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 text-white px-4 py-2 rounded-md">
+          {{ testing ? 'Sending...' : 'Send Test' }}
+        </button>
+        <button @click="saveSmtp" :disabled="savingSmtp" class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md">
+          {{ savingSmtp ? 'Saving...' : 'Save Email Settings' }}
+        </button>
+      </div>
+    </div>
+
     <!-- Current Settings -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
       <h3 class="text-lg font-medium text-white mb-4">Current Settings</h3>
@@ -84,7 +127,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import axios from 'axios'
 import { API_URL } from '../utils/api'
 
@@ -98,6 +141,13 @@ export default {
     const loading = ref(false)
     const message = ref('')
     const messageType = ref('')
+
+    const smtp = reactive({
+      host: '', port: '', from: '', username: '', password: '',
+      useTls: true, passwordSet: false,
+    })
+    const savingSmtp = ref(false)
+    const testing = ref(false)
 
     const showMessage = (text, type = 'success') => {
       message.value = text
@@ -117,6 +167,18 @@ export default {
         if (tmdbSetting) {
           tmdbApiKey.value = tmdbSetting.value === '***' ? '' : tmdbSetting.value
         }
+
+        const val = (key) => {
+          const s = settings.value.find(x => x.key === key)
+          return s ? s.value : ''
+        }
+        smtp.host = val('SMTP_HOST')
+        smtp.port = val('SMTP_PORT')
+        smtp.from = val('SMTP_FROM')
+        smtp.username = val('SMTP_USERNAME')
+        smtp.passwordSet = !!settings.value.find(x => x.key === 'SMTP_PASSWORD')
+        const tls = val('SMTP_USE_TLS')
+        smtp.useTls = tls === '' ? true : ['1', 'true', 'yes'].includes(String(tls).toLowerCase())
       } catch (error) {
         console.error('Error fetching settings:', error)
         showMessage('Failed to load settings', 'error')
@@ -159,6 +221,51 @@ export default {
       }
     }
 
+    // Upsert a settings-table key (create if new, update if it exists).
+    const upsertSetting = async (key, value, description, isSecret = false) => {
+      const existing = settings.value.find(s => s.key === key)
+      if (existing) {
+        await axios.put(`${API_URL}/settings/${key}`, { value, description })
+      } else {
+        await axios.post(`${API_URL}/settings/`, { key, value, description, is_secret: isSecret })
+      }
+    }
+
+    const saveSmtp = async () => {
+      savingSmtp.value = true
+      try {
+        await upsertSetting('SMTP_HOST', smtp.host.trim(), 'SMTP server host')
+        await upsertSetting('SMTP_PORT', String(smtp.port || '587').trim(), 'SMTP server port')
+        await upsertSetting('SMTP_FROM', smtp.from.trim(), 'From address for notifications')
+        await upsertSetting('SMTP_USERNAME', smtp.username.trim(), 'SMTP username')
+        await upsertSetting('SMTP_USE_TLS', smtp.useTls ? 'true' : 'false', 'Use STARTTLS')
+        // Only write the password when the admin entered a new one.
+        if (smtp.password.trim()) {
+          await upsertSetting('SMTP_PASSWORD', smtp.password.trim(), 'SMTP password', true)
+          smtp.password = ''
+        }
+        await fetchSettings()
+        showMessage('Email settings saved!')
+      } catch (error) {
+        console.error('Error saving SMTP settings:', error)
+        showMessage('Failed to save email settings', 'error')
+      } finally {
+        savingSmtp.value = false
+      }
+    }
+
+    const sendTestEmail = async () => {
+      testing.value = true
+      try {
+        const { data } = await axios.post(`${API_URL}/notifications/test`, { service: 'email' })
+        showMessage(data.ok ? `Test sent: ${data.message}` : `Test failed: ${data.message}`, data.ok ? 'success' : 'error')
+      } catch (error) {
+        showMessage(error.response?.data?.detail || 'Test email failed', 'error')
+      } finally {
+        testing.value = false
+      }
+    }
+
     const deleteSetting = async (key) => {
       if (!confirm(`Are you sure you want to delete the setting "${key}"?`)) {
         return
@@ -187,7 +294,12 @@ export default {
       message,
       messageType,
       saveSettings,
-      deleteSetting
+      deleteSetting,
+      smtp,
+      savingSmtp,
+      testing,
+      saveSmtp,
+      sendTestEmail,
     }
   }
 }
