@@ -19,6 +19,8 @@ async def notify_request_fulfilled(db: Session, request: Request) -> None:
     user = db.query(User).filter(User.id == request.user_id).first()
     if not user or not user.email:
         return
+    if not user.notify_on_available:
+        return
 
     notifiers = notifier_registry.configured()
     if not notifiers:
