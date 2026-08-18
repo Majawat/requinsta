@@ -11,6 +11,7 @@ class MediaType(PyEnum):
     TV_SHOW = "tv_show"
     MUSIC = "music"
     COMIC = "comic"
+    PODCAST = "podcast"
     OTHER = "other"
 
 

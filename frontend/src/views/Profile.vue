@@ -1,78 +1,66 @@
 <template>
-  <div class="space-y-6">
-    <div class="border-b border-gray-700 pb-4">
-      <h1 class="text-2xl font-bold text-white">Account</h1>
-      <p class="text-gray-400 mt-1">Manage your account and preferences</p>
-    </div>
+  <div class="space-y-5">
+    <h1 class="text-[22px] font-bold tracking-tight">Account</h1>
 
     <!-- Profile -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Profile</h2>
+    <section class="card p-5">
+      <h2 class="text-base font-semibold mb-4">Profile</h2>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+          <label class="label">Email</label>
           <div class="flex gap-2">
-            <input v-model="email" type="email"
-              class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
-            <button @click="saveEmail" :disabled="savingEmail || email === me.email"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-md">
+            <input v-model="email" type="email" class="input flex-1" />
+            <button @click="saveEmail" :disabled="savingEmail || email === me.email" class="btn-primary flex-none">
               {{ savingEmail ? 'Saving…' : 'Save' }}
             </button>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-300 mb-1">Role</label>
-          <input type="text" :value="me.role" disabled
-            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400 cursor-not-allowed" />
-          <p class="text-xs text-gray-500 mt-1">Role is assigned by administrators</p>
+          <label class="label">Role</label>
+          <input type="text" :value="me.role" disabled class="input text-slate-400 cursor-not-allowed" />
+          <p class="text-xs text-slate-500 mt-1">Role is assigned by administrators</p>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Notification preferences -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Notifications</h2>
-      <label class="inline-flex items-center text-sm text-gray-300">
-        <input type="checkbox" v-model="notifyOnAvailable" @change="saveNotify" class="mr-2" />
+    <section class="card p-5">
+      <h2 class="text-base font-semibold mb-3">Notifications</h2>
+      <label class="inline-flex items-center gap-2 text-sm text-slate-300">
+        <input type="checkbox" v-model="notifyOnAvailable" @change="saveNotify" class="accent-indigo-600 w-4 h-4" />
         Email me when a request becomes available
       </label>
-    </div>
+    </section>
 
     <!-- Change password -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Change Password</h2>
+    <section class="card p-5">
+      <h2 class="text-base font-semibold mb-4">Change password</h2>
       <div class="space-y-3 max-w-md">
-        <input v-model="pw.current" type="password" placeholder="Current password"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
-        <input v-model="pw.next" type="password" placeholder="New password (min 8 chars)"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
-        <input v-model="pw.confirm" type="password" placeholder="Confirm new password"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+        <input v-model="pw.current" type="password" placeholder="Current password" class="input" />
+        <input v-model="pw.next" type="password" placeholder="New password (min 8 chars)" class="input" />
+        <input v-model="pw.confirm" type="password" placeholder="Confirm new password" class="input" />
         <div class="flex justify-end">
-          <button @click="changePassword" :disabled="changingPw"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-md">
-            {{ changingPw ? 'Updating…' : 'Update Password' }}
+          <button @click="changePassword" :disabled="changingPw" class="btn-primary">
+            {{ changingPw ? 'Updating…' : 'Update password' }}
           </button>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Request stats -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Your Requests</h2>
+    <section class="card p-5">
+      <h2 class="text-base font-semibold mb-4">Your requests</h2>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="text-center"><div class="text-2xl font-bold text-white">{{ userRequests.length }}</div><div class="text-sm text-gray-400">Total</div></div>
-        <div class="text-center"><div class="text-2xl font-bold text-yellow-400">{{ count('PENDING') }}</div><div class="text-sm text-gray-400">Pending</div></div>
-        <div class="text-center"><div class="text-2xl font-bold text-green-400">{{ count('APPROVED') }}</div><div class="text-sm text-gray-400">Approved</div></div>
-        <div class="text-center"><div class="text-2xl font-bold text-blue-400">{{ count('FULFILLED') }}</div><div class="text-sm text-gray-400">Fulfilled</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-slate-100">{{ userRequests.length }}</div><div class="text-xs text-slate-400 mt-0.5">Total</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-amber-300">{{ count('PENDING') }}</div><div class="text-xs text-slate-400 mt-0.5">Pending</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-sky-300">{{ count('APPROVED') }}</div><div class="text-xs text-slate-400 mt-0.5">Approved</div></div>
+        <div class="text-center"><div class="text-2xl font-bold text-emerald-300">{{ count('FULFILLED') }}</div><div class="text-xs text-slate-400 mt-0.5">Available</div></div>
       </div>
-    </div>
+    </section>
 
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <button @click="authStore.logout" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">Sign Out</button>
-    </div>
+    <button @click="authStore.logout" class="btn-secondary w-full">Sign out</button>
 
-    <div v-if="message" class="p-4 rounded-lg" :class="messageOk ? 'bg-green-900 text-green-100' : 'bg-red-900 text-red-100'">{{ message }}</div>
+    <div v-if="message" class="p-4 rounded-lg text-sm" :class="messageOk ? 'bg-emerald-500/10 text-emerald-200 border border-emerald-400/30' : 'bg-rose-500/10 text-rose-200 border border-rose-400/30'">{{ message }}</div>
   </div>
 </template>
 

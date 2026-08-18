@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-import Dashboard from '../views/Dashboard.vue'
-import Browse from '../views/Browse.vue'
+import Search from '../views/Search.vue'
 import MyRequests from '../views/MyRequests.vue'
 import Admin from '../views/Admin.vue'
 import Profile from '../views/Profile.vue'
@@ -10,15 +9,14 @@ import Profile from '../views/Profile.vue'
 const routes = [
   {
     path: '/',
-    name: 'Dashboard',
-    component: Dashboard,
+    name: 'Search',
+    component: Search,
     meta: { requiresAuth: true }
   },
   {
+    // Legacy deep links (Dashboard used to hand off to /browse?q=…&type=…).
     path: '/browse',
-    name: 'Browse',
-    component: Browse,
-    meta: { requiresAuth: true }
+    redirect: (to) => ({ path: '/', query: to.query })
   },
   {
     path: '/my-requests',
@@ -27,10 +25,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    // Day-to-day admin: the requests + issues queues.
     path: '/admin',
-    name: 'Admin',
+    name: 'Queue',
     component: Admin,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'queue' }
+  },
+  {
+    // Configuration, split off from the daily queue.
+    path: '/admin/setup',
+    name: 'Setup',
+    component: Admin,
+    meta: { requiresAuth: true, requiresAdmin: true, section: 'setup' }
   },
   {
     path: '/profile',
@@ -45,25 +51,22 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
+// Return-style guard (the old next(false) aborted the very first navigation, so
+// after logging in nothing re-triggered it → a blank screen until you navigated
+// or refreshed). The whole app is gated on auth in App.vue, so it's safe to let
+// routes resolve while logged out — they just render under the login overlay.
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   if (!authStore.initialized) {
     await authStore.initAuth()
   }
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // App.vue shows the login form when not authenticated; cancel navigation
-    next(false)
-    return
-  }
-
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    next('/')
-    return
+    return { path: '/' }
   }
 
-  next()
+  return true
 })
 
 export default router
