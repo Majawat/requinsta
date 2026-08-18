@@ -19,9 +19,11 @@ from app.plugins.openlibrary import OpenLibraryProvider
 from app.plugins.tmdb import TMDBProvider
 from app.plugins.readarr import ReadarrManager
 from app.plugins.lidarr import LidarrManager
+from app.plugins.radarr import RadarrManager
+from app.plugins.sonarr import SonarrManager
 from app.plugins.email_notifier import EmailNotifier
 
-_ALL_MEDIA_TYPES = ["book", "audiobook", "movie", "tv_show", "music", "comic", "other"]
+_ALL_MEDIA_TYPES = ["book", "audiobook", "movie", "tv_show", "music", "comic", "podcast", "other"]
 
 
 def _builtin_descriptors():
@@ -111,6 +113,44 @@ def _builtin_descriptors():
                             help="loaded from the instance"),
                 ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
                 ConfigField(key="metadata_profile_id", label="Metadata Profile", type="select"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=MEDIA_MANAGER,
+            key="radarr",
+            display_name="Radarr",
+            version="1.0.0",
+            obj=RadarrManager(),
+            config_scope=CONFIG_INSTANCE,
+            media_types=["movie"],
+            config_schema=[
+                ConfigField(key="base_url", label="Base URL", type="string", required=True,
+                            help="e.g. http://192.168.1.10:7878"),
+                ConfigField(key="api_key", label="API Key", type="password", required=True, secret=True),
+                ConfigField(key="media_types", label="Media Types", type="multiselect",
+                            options=["movie"]),
+                ConfigField(key="root_folder_path", label="Root Folder", type="select",
+                            help="loaded from the instance"),
+                ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=MEDIA_MANAGER,
+            key="sonarr",
+            display_name="Sonarr",
+            version="1.0.0",
+            obj=SonarrManager(),
+            config_scope=CONFIG_INSTANCE,
+            media_types=["tv_show"],
+            config_schema=[
+                ConfigField(key="base_url", label="Base URL", type="string", required=True,
+                            help="e.g. http://192.168.1.10:8989"),
+                ConfigField(key="api_key", label="API Key", type="password", required=True, secret=True),
+                ConfigField(key="media_types", label="Media Types", type="multiselect",
+                            options=["tv_show"]),
+                ConfigField(key="root_folder_path", label="Root Folder", type="select",
+                            help="loaded from the instance"),
+                ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
             ],
         ),
         PluginDescriptor(
