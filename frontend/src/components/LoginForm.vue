@@ -1,42 +1,32 @@
 <template>
-  <div class="max-w-md mx-auto bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4 text-white">{{ isLogin ? "Login" : "Register" }}</h2>
+  <div class="card p-6 shadow-xl shadow-black/20">
+    <h2 class="text-xl font-semibold mb-5 text-white">{{ isLogin ? "Welcome back" : "Create your account" }}</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-300">Email</label>
-        <input
-          v-model="email"
-          type="email"
-          required
-          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+        <label class="label">Email</label>
+        <input v-model="email" type="email" required placeholder="you@example.com" class="input" />
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-300">Password</label>
-        <input
-          v-model="password"
-          type="password"
-          required
-          class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+        <label class="label">Password</label>
+        <input v-model="password" type="password" required placeholder="••••••••" class="input" />
       </div>
 
-      <div v-if="error" class="text-red-400 text-sm">
+      <div v-if="error" class="flex items-start gap-2 text-red-300 text-sm bg-red-500/10 ring-1 ring-red-500/30 rounded-lg px-3 py-2">
+        <svg class="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
         {{ error }}
       </div>
 
-      <button
-        type="submit"
-        :disabled="loading"
-        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-        {{ loading ? "Loading..." : isLogin ? "Login" : "Register" }}
+      <button type="submit" :disabled="loading" class="btn-primary w-full py-2.5">
+        {{ loading ? "Please wait…" : isLogin ? "Sign in" : "Create account" }}
       </button>
     </form>
 
-    <p class="mt-4 text-center text-sm text-gray-400">
+    <p class="mt-5 text-center text-sm text-gray-400">
       {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
       <button @click="toggleMode" class="font-medium text-indigo-400 hover:text-indigo-300">
-        {{ isLogin ? "Register" : "Login" }}
+        {{ isLogin ? "Register" : "Sign in" }}
       </button>
     </p>
   </div>

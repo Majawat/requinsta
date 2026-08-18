@@ -1,130 +1,82 @@
 <template>
   <div class="lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-    <!-- Sidebar component for mobile -->
     <div
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transition-transform transform lg:translate-x-0',
+        'fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 transition-transform transform lg:translate-x-0',
         open ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <div class="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900">
-        <div class="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center">
+      <!-- Brand -->
+      <div class="flex items-center h-16 flex-shrink-0 px-5">
+        <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-900/40">
           <span class="text-white font-bold text-lg">R</span>
         </div>
-        <h1 class="ml-3 text-xl font-semibold text-white">Requinsta</h1>
+        <h1 class="ml-3 text-lg font-semibold tracking-tight text-white">Requinsta</h1>
       </div>
 
-      <div class="mt-5 flex-1 flex flex-col">
-        <nav class="flex-1 px-2 pb-4 space-y-1">
-          <router-link
-            v-for="item in navigation"
-            :key="item.name"
-            :to="item.href"
-            :class="[
-              $route.name === item.name
-                ? 'bg-gray-900 text-white'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-              'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
-            ]"
-            @click="$emit('close')"
-          >
-            <component
-              :is="item.icon"
-              :class="[
-                $route.name === item.name ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300',
-                'mr-3 flex-shrink-0 h-6 w-6'
-              ]"
-            />
-            {{ item.name }}
-          </router-link>
-        </nav>
-      </div>
+      <nav class="mt-4 px-3 space-y-1">
+        <router-link
+          v-for="item in navigation"
+          :key="item.name"
+          :to="item.href"
+          @click="$emit('close')"
+          :class="[
+            'group relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
+            isActive(item)
+              ? 'bg-indigo-500/10 text-white'
+              : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+          ]"
+        >
+          <span v-if="isActive(item)" class="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-indigo-500"></span>
+          <svg class="h-5 w-5 flex-shrink-0" :class="isActive(item) ? 'text-indigo-400' : 'text-gray-500 group-hover:text-gray-300'"
+               fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
+            <path v-for="(d, i) in item.paths" :key="i" stroke-linecap="round" stroke-linejoin="round" :d="d" />
+          </svg>
+          {{ item.name }}
+        </router-link>
+      </nav>
     </div>
   </div>
 </template>
 
 <script>
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
-const DashboardIcon = {
-  template: `
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v10a2 2 0 01-2 2H10a2 2 0 01-2-2V5z" />
-    </svg>
-  `
-}
-
-const BrowseIcon = {
-  template: `
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  `
-}
-
-const RequestsIcon = {
-  template: `
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-    </svg>
-  `
-}
-
-const AdminIcon = {
-  template: `
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  `
-}
-
-const ProfileIcon = {
-  template: `
-    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
-  `
+const ICONS = {
+  dashboard: ['M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75'],
+  browse: ['M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z'],
+  requests: ['M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z'],
+  admin: [
+    'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.004.827c-.292.24-.437.613-.43.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.542-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z',
+    'M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+  ],
+  profile: ['M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'],
 }
 
 export default {
   name: 'Sidebar',
-  components: {
-    DashboardIcon,
-    BrowseIcon,
-    RequestsIcon,
-    AdminIcon,
-    ProfileIcon
-  },
-  props: {
-    open: {
-      type: Boolean,
-      default: false
-    }
-  },
+  props: { open: { type: Boolean, default: false } },
   emits: ['close'],
   setup() {
+    const route = useRoute()
     const authStore = useAuthStore()
 
     const navigation = computed(() => {
-      const baseNavigation = [
-        { name: 'Dashboard', href: '/', icon: 'DashboardIcon' },
-        { name: 'Browse', href: '/browse', icon: 'BrowseIcon' },
-        { name: 'My Requests', href: '/my-requests', icon: 'RequestsIcon' },
+      const nav = [
+        { name: 'Dashboard', href: '/', paths: ICONS.dashboard },
+        { name: 'Browse', href: '/browse', paths: ICONS.browse },
+        { name: 'My Requests', href: '/my-requests', paths: ICONS.requests },
       ]
-
-      if (authStore.isAdmin) {
-        baseNavigation.push({ name: 'Admin', href: '/admin', icon: 'AdminIcon' })
-      }
-
-      baseNavigation.push({ name: 'Profile', href: '/profile', icon: 'ProfileIcon' })
-
-      return baseNavigation
+      if (authStore.isAdmin) nav.push({ name: 'Admin', href: '/admin', paths: ICONS.admin })
+      nav.push({ name: 'Profile', href: '/profile', paths: ICONS.profile })
+      return nav
     })
 
-    return { navigation }
+    const isActive = (item) => route.path === item.href
+
+    return { navigation, isActive }
   }
 }
 </script>
