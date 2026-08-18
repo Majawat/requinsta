@@ -52,31 +52,32 @@
       <div
         v-for="request in filteredRequests"
         :key="request.id"
-        class="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors"
+        class="card card-hover p-5"
       >
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <div class="flex items-center space-x-3">
-              <h3 class="text-lg font-medium text-white">{{ request.title }}</h3>
-              <span
-                :class="[
-                  'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                  getStatusClasses(request.status)
-                ]"
-              >
-                {{ request.status }}
+        <div class="flex gap-4 items-start">
+          <img v-if="request.cover_url" :src="request.cover_url" :alt="request.title"
+            class="w-16 h-24 rounded-md object-cover flex-shrink-0 bg-gray-700" @error="$event.target.style.display='none'" />
+          <div v-else class="w-16 h-24 rounded-md flex-shrink-0 bg-gray-700 flex items-center justify-center text-gray-500">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h3 class="text-lg font-medium text-white">{{ request.title }}</h3>
+                <p v-if="request.author" class="text-sm text-gray-400">{{ request.author }}</p>
+              </div>
+              <span :class="['badge flex-shrink-0', statusMeta(request.status).classes]">
+                <span :class="['h-1.5 w-1.5 rounded-full', statusMeta(request.status).dot]"></span>
+                {{ statusMeta(request.status).label }}
               </span>
             </div>
 
-            <p class="text-gray-300 mt-2">{{ request.description }}</p>
+            <p v-if="request.description" class="text-gray-300 mt-2 text-sm">{{ request.description }}</p>
 
-            <div class="flex items-center mt-4 space-x-4">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
-                {{ request.media_type }}
-              </span>
-              <span class="text-sm text-gray-400">
-                Requested on {{ formatDate(request.created_at) }}
-              </span>
+            <div class="flex items-center gap-3 mt-3 text-sm">
+              <span class="text-gray-400">{{ mediaTypeLabel(request.media_type) }}</span>
+              <span class="text-gray-600">·</span>
+              <span class="text-gray-500">Requested {{ formatDate(request.created_at) }}</span>
             </div>
 
             <!-- Status-specific information -->
@@ -145,7 +146,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useRequestsStore } from '../stores/requests'
-import { getStatusClasses, formatDate } from '../utils/requestUtils'
+import { statusMeta, mediaTypeLabel, formatDate } from '../utils/requestUtils'
 import { API_URL } from '../utils/api'
 
 const CATEGORIES = [
@@ -227,7 +228,8 @@ export default {
       activeFilter,
       filters,
       filteredRequests,
-      getStatusClasses,
+      statusMeta,
+      mediaTypeLabel,
       formatDate,
       CATEGORIES,
       issuesFor,
