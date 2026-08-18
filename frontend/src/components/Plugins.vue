@@ -8,20 +8,20 @@
       </p>
     </div>
 
-    <!-- Active search provider per media type -->
+    <!-- Search source per media type -->
     <div class="card p-4" v-if="Object.keys(selection.options).length">
-      <h3 class="text-lg font-medium text-white mb-1">Search Provider per Media Type</h3>
+      <h3 class="text-lg font-medium text-white mb-1">Search Source per Media Type</h3>
       <p class="text-sm text-gray-400 mb-3">
-        Choose one metadata provider per type. Matching your media manager's source
-        (e.g. Hardcover for a Hardcover-backed Readarr) gives cleaner results and accurate availability.
+        By default each type searches its media manager directly — so results are
+        exactly what can be added, with accurate availability. Optionally override
+        with a standalone metadata provider.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div v-for="(opts, mt) in selection.options" :key="mt">
           <label class="block text-sm text-gray-300 capitalize">{{ mt.replace('_', ' ') }}</label>
-          <select v-model="selection.active[mt]" @change="saveSelection"
-            class="input mt-1">
-            <option value="">All providers</option>
-            <option v-for="o in opts" :key="o.key" :value="o.key">{{ o.name }}</option>
+          <select v-model="selection.active[mt]" @change="saveSelection" class="input mt-1">
+            <option value="">Media manager (default)</option>
+            <option v-for="o in opts" :key="o.id" :value="o.id">{{ o.label }}</option>
           </select>
         </div>
       </div>

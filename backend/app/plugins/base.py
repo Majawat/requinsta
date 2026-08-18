@@ -81,6 +81,16 @@ class MediaManager(ABC):
         Default: empty (override if the manager can report its library)."""
         return set()
 
+    async def search(self, config: Any, query: str) -> list:
+        """Search the manager's own catalog (its /lookup), so search results are
+        exactly what this manager can add — with the manager's foreign id as the
+        external_id, so add + availability are always in the same id space.
+
+        Returns a list of dicts:
+          {title, author, year, cover_url, description, external_id, available}
+        Default: empty (override if the manager can search)."""
+        return []
+
 
 class NotificationResult(BaseModel):
     ok: bool
