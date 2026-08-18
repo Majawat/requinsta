@@ -98,6 +98,34 @@
               </p>
             </div>
 
+            <!-- Issues on this (fulfilled) media -->
+            <div v-if="request.status === 'FULFILLED'" class="mt-3">
+              <div v-for="issue in issuesFor(request.id)" :key="issue.id" class="mb-2 p-3 bg-gray-700 border border-gray-600 rounded-md">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-200">{{ categoryLabel(issue.category) }}</span>
+                  <span :class="['px-2 py-0.5 rounded-full text-xs', issue.status === 'RESOLVED' ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200']">{{ issue.status }}</span>
+                </div>
+                <p class="text-sm text-gray-400 mt-1">{{ issue.description }}</p>
+                <p v-if="issue.admin_response" class="text-sm text-blue-300 mt-2">Admin: {{ issue.admin_response }}</p>
+              </div>
+
+              <button v-if="reportingId !== request.id" @click="startReport(request.id)"
+                class="text-sm text-red-400 hover:text-red-300">Report an issue</button>
+
+              <div v-else class="mt-2 p-3 bg-gray-700 border border-gray-600 rounded-md space-y-2">
+                <select v-model="reportForm.category" class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white text-sm">
+                  <option v-for="c in CATEGORIES" :key="c.value" :value="c.value">{{ c.label }}</option>
+                </select>
+                <textarea v-model="reportForm.description" rows="2" placeholder="What's wrong?"
+                  class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white text-sm placeholder-gray-400"></textarea>
+                <div class="flex justify-end gap-2">
+                  <button @click="reportingId = null" class="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500">Cancel</button>
+                  <button @click="submitReport(request.id)" :disabled="submitting || !reportForm.description.trim()"
+                    class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50">{{ submitting ? 'Sending…' : 'Submit' }}</button>
+                </div>
+              </div>
+            </div>
+
             <div v-if="request.status === 'DENIED'" class="mt-4 p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-md">
               <p class="text-red-200 text-sm">
                 <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,15 +142,60 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import axios from 'axios'
 import { useRequestsStore } from '../stores/requests'
 import { getStatusClasses, formatDate } from '../utils/requestUtils'
+import { API_URL } from '../utils/api'
+
+const CATEGORIES = [
+  { value: 'WRONG_CONTENT', label: 'Wrong content (edition/version)' },
+  { value: 'QUALITY', label: 'Quality problem' },
+  { value: 'PLAYBACK', label: "Won't play / open" },
+  { value: 'INCOMPLETE', label: 'Incomplete (missing parts)' },
+  { value: 'OTHER', label: 'Other' },
+]
 
 export default {
   name: 'MyRequests',
   setup() {
     const requestsStore = useRequestsStore()
     const activeFilter = ref('all')
+
+    const issues = ref([])
+    const reportingId = ref(null)
+    const reportForm = reactive({ category: 'WRONG_CONTENT', description: '' })
+    const submitting = ref(false)
+
+    const issuesFor = (requestId) => issues.value.filter(i => i.request_id === requestId)
+    const categoryLabel = (v) => (CATEGORIES.find(c => c.value === v) || {}).label || v
+
+    const loadIssues = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/issues/`)
+        issues.value = data
+      } catch (e) { /* non-fatal */ }
+    }
+
+    const startReport = (requestId) => {
+      reportingId.value = requestId
+      reportForm.category = 'WRONG_CONTENT'
+      reportForm.description = ''
+    }
+
+    const submitReport = async (requestId) => {
+      submitting.value = true
+      try {
+        await axios.post(`${API_URL}/issues/`, {
+          request_id: requestId,
+          category: reportForm.category,
+          description: reportForm.description,
+        })
+        reportingId.value = null
+        await loadIssues()
+      } catch (e) { /* surfaced via disabled state; keep simple */ }
+      finally { submitting.value = false }
+    }
 
     const filters = computed(() => {
       const counts = requestsStore.requests.reduce((acc, r) => {
@@ -146,7 +219,7 @@ export default {
     })
 
     onMounted(async () => {
-      await requestsStore.fetchRequests()
+      await Promise.all([requestsStore.fetchRequests(), loadIssues()])
     })
 
     return {
@@ -156,6 +229,14 @@ export default {
       filteredRequests,
       getStatusClasses,
       formatDate,
+      CATEGORIES,
+      issuesFor,
+      categoryLabel,
+      reportingId,
+      reportForm,
+      submitting,
+      startReport,
+      submitReport,
     }
   }
 }
