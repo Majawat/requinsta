@@ -15,17 +15,20 @@ class PluginManager:
     def register_provider(self, provider: MetadataProvider):
         self.providers[provider.name] = provider
 
-    def get_providers_for_media_type(self, media_type: str) -> List[MetadataProvider]:
+    def get_providers_for_media_type(
+        self, media_type: str, allowed_names=None
+    ) -> List[MetadataProvider]:
         return [
             provider
             for provider in self.providers.values()
             if media_type in provider.supported_media_types
+            and (allowed_names is None or provider.name in allowed_names)
         ]
 
     async def search_metadata(
-        self, query: str, media_type: str
+        self, query: str, media_type: str, allowed_names=None
     ) -> Dict[str, List[MediaMetadata]]:
-        providers = self.get_providers_for_media_type(media_type)
+        providers = self.get_providers_for_media_type(media_type, allowed_names)
 
         async def safe_search(provider: MetadataProvider):
             try:

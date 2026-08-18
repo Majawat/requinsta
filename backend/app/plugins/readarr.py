@@ -217,6 +217,55 @@ class ReadarrManager(MediaManager):
             ok=False, message=f"Add rejected ({resp.status_code}): {resp.text[:200]}"
         )
 
+    @staticmethod
+    def _clean_author(author_title: str, title: str) -> str:
+        # Readarr's lookup gives an ugly authorTitle like "weir, andy <title>".
+        # Strip the title, flip "last, first" -> "First Last".
+        a = author_title or ""
+        if title and title.lower() in a.lower():
+            a = a[: a.lower().rfind(title.lower())].strip()
+        if "," in a:
+            parts = [p.strip() for p in a.split(",", 1)]
+            if len(parts) == 2 and parts[1]:
+                a = f"{parts[1]} {parts[0]}"
+        return a.strip().title()
+
+    async def search(self, config: Any, query: str) -> list:
+        try:
+            resp = await self._get(config, "/book/lookup", term=query)
+        except httpx.HTTPError:
+            return []
+        if resp.status_code != 200:
+            return []
+        out = []
+        for b in resp.json() or []:
+            title = b.get("title") or ""
+            images = b.get("images") or []
+            cover = next((i.get("remoteUrl") for i in images if i.get("remoteUrl")), None) \
+                or b.get("remoteCover")
+            year = None
+            rd = b.get("releaseDate")
+            if rd:
+                try:
+                    year = int(str(rd)[:4])
+                except (ValueError, TypeError):
+                    year = None
+            stats = b.get("statistics") or {}
+            author = (b.get("author") or {}).get("authorName") \
+                or self._clean_author(b.get("authorTitle", ""), title)
+            out.append(
+                {
+                    "title": title,
+                    "author": author,
+                    "year": year,
+                    "cover_url": cover,
+                    "description": b.get("overview") or "",
+                    "external_id": str(b.get("foreignBookId")) if b.get("foreignBookId") else None,
+                    "available": (stats.get("bookFileCount") or 0) > 0,
+                }
+            )
+        return out
+
     async def owned_external_ids(self, config: Any) -> set:
         try:
             resp = await self._get(config, "/book")
