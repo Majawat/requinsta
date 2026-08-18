@@ -6,10 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.models import get_db
 from app.models.request import Request, RequestStatus, MediaType
+from app.models.setting import Setting
 from app.models.user import User
 from app.api.v1.deps import get_authenticated_user
 from app.plugins.manager import plugin_manager
 from app.plugins.media_manager_registry import media_manager_registry
+from app.plugins.provider_selection import active_provider_names
 
 router = APIRouter()
 
@@ -50,8 +52,12 @@ async def search_metadata(
     db: Session = Depends(get_db),
     _: User = Depends(get_authenticated_user),
 ) -> List[MediaMetadataResponse]:
-    """Search across providers and annotate each result with availability."""
-    provider_results = await plugin_manager.search_metadata(query, media_type)
+    """Search across providers and annotate each result with availability.
+
+    If an admin has chosen an active provider for this media type, only that
+    provider is used; otherwise all providers that support the type are queried."""
+    allowed = active_provider_names(db, media_type)
+    provider_results = await plugin_manager.search_metadata(query, media_type, allowed)
 
     flattened: List[MediaMetadataResponse] = []
     for provider_name, results in provider_results.items():

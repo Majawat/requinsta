@@ -8,6 +8,25 @@
       </p>
     </div>
 
+    <!-- Active search provider per media type -->
+    <div class="card p-4" v-if="Object.keys(selection.options).length">
+      <h3 class="text-lg font-medium text-white mb-1">Search Provider per Media Type</h3>
+      <p class="text-sm text-gray-400 mb-3">
+        Choose one metadata provider per type. Matching your media manager's source
+        (e.g. Hardcover for a Hardcover-backed Readarr) gives cleaner results and accurate availability.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div v-for="(opts, mt) in selection.options" :key="mt">
+          <label class="block text-sm text-gray-300 capitalize">{{ mt.replace('_', ' ') }}</label>
+          <select v-model="selection.active[mt]" @change="saveSelection"
+            class="input mt-1">
+            <option value="">All providers</option>
+            <option v-for="o in opts" :key="o.key" :value="o.key">{{ o.name }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div v-for="group in groups" :key="group.type" v-show="group.items.length">
       <h3 class="text-lg font-medium text-white mb-3">{{ group.label }}</h3>
       <div class="space-y-3">
@@ -138,6 +157,7 @@ export default {
     const saving = ref(false)
     const testing = ref(false)
     const testResult = ref(null)
+    const selection = reactive({ options: {}, active: {} })
 
     const groups = computed(() =>
       Object.entries(TYPE_LABELS).map(([type, label]) => ({
@@ -158,6 +178,23 @@ export default {
       } catch (e) {
         flash('Failed to load plugins', false)
       }
+    }
+
+    const loadSelection = async () => {
+      try {
+        const { data } = await axios.get(`${API_URL}/plugins/metadata-selection`)
+        selection.options = data.options
+        const active = { ...data.active }
+        for (const mt of Object.keys(data.options)) if (!(mt in active)) active[mt] = ''
+        selection.active = active
+      } catch (e) { /* non-fatal */ }
+    }
+
+    const saveSelection = async () => {
+      try {
+        await axios.put(`${API_URL}/plugins/metadata-selection`, { active: selection.active })
+        flash('Search providers updated')
+      } catch (e) { flash('Failed to update providers', false) }
     }
 
     const openConfig = async (p) => {
@@ -206,8 +243,9 @@ export default {
       }
     }
 
-    onMounted(load)
-    return { groups, message, messageOk, openId, cfg, form, saving, testing, testResult, openConfig, closeConfig, saveConfig, testPlugin }
+    onMounted(() => { load(); loadSelection() })
+    return { groups, message, messageOk, openId, cfg, form, saving, testing, testResult,
+      selection, saveSelection, openConfig, closeConfig, saveConfig, testPlugin }
   },
 }
 </script>

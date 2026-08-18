@@ -18,6 +18,7 @@ from app.plugins.descriptor import (
     CONFIG_NONE,
 )
 from app.plugins.discovery import discover
+from app.plugins.provider_selection import load_map, save_map, provider_options
 
 router = APIRouter()
 
@@ -174,6 +175,36 @@ def _config_response(db: Session, descriptor) -> PluginConfigResponse:
         testable=descriptor.plugin_type in _TESTABLE,
         fields=fields,
     )
+
+
+class MetadataSelection(BaseModel):
+    options: Dict[str, List[dict]]
+    active: Dict[str, str]
+
+
+class MetadataSelectionUpdate(BaseModel):
+    active: Dict[str, str]
+
+
+@router.get("/metadata-selection", response_model=MetadataSelection)
+def get_metadata_selection(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    """Per-media-type provider options and the currently active choice."""
+    return MetadataSelection(options=provider_options(), active=load_map(db))
+
+
+@router.put("/metadata-selection", response_model=MetadataSelection)
+def set_metadata_selection(
+    body: MetadataSelectionUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    # Drop empty selections (empty string = "all providers").
+    cleaned = {mt: key for mt, key in body.active.items() if key}
+    save_map(db, cleaned)
+    return MetadataSelection(options=provider_options(), active=cleaned)
 
 
 @router.get("/{plugin_type}/{key}/config", response_model=PluginConfigResponse)
