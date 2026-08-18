@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = ["*"]
     # Directory scanned for third-party plugin `.py` drop-ins (mount a volume here).
     PLUGINS_DIR: str = "/plugins"
+    # How often the background poller checks approved requests for completion.
+    # Set to 0 to disable.
+    FULFILLMENT_POLL_SECONDS: int = 300
 
     class Config:
         env_file = ".env"
