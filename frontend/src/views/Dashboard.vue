@@ -1,125 +1,66 @@
 <template>
   <div class="space-y-6">
-    <!-- Welcome header -->
-    <div class="border-b border-gray-700 pb-4">
-      <h1 class="text-2xl font-bold text-white">Dashboard</h1>
-      <p class="text-gray-400 mt-1">Welcome back, {{ authStore.user?.email }}</p>
-    </div>
-
-    <!-- Admin notification -->
-    <div
-      v-if="authStore.isAdmin"
-      class="bg-yellow-900 border border-yellow-700 p-4 rounded-lg"
-    >
-      <p class="text-yellow-200 font-medium">Admin Mode Active</p>
-    </div>
-
-    <!-- Stats cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <svg class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-400 truncate">Total Requests</dt>
-              <dd class="text-lg font-medium text-white">{{ totalRequests }}</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <svg class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-400 truncate">Pending</dt>
-              <dd class="text-lg font-medium text-white">{{ pendingRequests }}</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <svg class="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div class="ml-5 w-0 flex-1">
-            <dl>
-              <dt class="text-sm font-medium text-gray-400 truncate">Approved</dt>
-              <dd class="text-lg font-medium text-white">{{ approvedRequests }}</dd>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick actions -->
+    <!-- Search-first hero -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Quick Actions</h2>
-      <div class="space-y-3">
-        <router-link
-          to="/browse"
-          class="flex items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-        >
-          <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span class="text-gray-200">Browse & Search Media</span>
-        </router-link>
-
-        <router-link
-          to="/my-requests"
-          class="flex items-center p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-        >
-          <svg class="h-5 w-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <span class="text-gray-200">View My Requests</span>
-        </router-link>
+      <h1 class="text-2xl font-bold text-white">What do you want to add?</h1>
+      <p class="text-gray-400 mt-1">Search books, movies, music, comics and more — then request it.</p>
+      <div class="mt-4 flex flex-col sm:flex-row gap-2">
+        <select v-model="mediaType" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+          <option v-for="t in MEDIA_TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
+        </select>
+        <input
+          v-model="query"
+          @keyup.enter="search"
+          type="text"
+          placeholder="Title, author, keyword…"
+          class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button @click="search" :disabled="!query.trim()"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-md">
+          Search
+        </button>
       </div>
     </div>
 
-    <!-- Recent requests -->
+    <!-- Compact stats -->
+    <div class="grid grid-cols-3 gap-4">
+      <div class="bg-gray-800 border border-gray-700 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-white">{{ totalRequests }}</div>
+        <div class="text-sm text-gray-400">Your Requests</div>
+      </div>
+      <div class="bg-gray-800 border border-gray-700 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-yellow-400">{{ pendingRequests }}</div>
+        <div class="text-sm text-gray-400">Pending</div>
+      </div>
+      <div class="bg-gray-800 border border-gray-700 p-4 rounded-lg text-center">
+        <div class="text-2xl font-bold text-blue-400">{{ fulfilledRequests }}</div>
+        <div class="text-sm text-gray-400">Available</div>
+      </div>
+    </div>
+
+    <!-- Recent requests strip -->
     <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h2 class="text-lg font-medium text-white mb-4">Recent Requests</h2>
-      <div v-if="requestsStore.loading" class="text-gray-400">Loading...</div>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-medium text-white">Your Recent Requests</h2>
+        <router-link to="/my-requests" class="text-sm text-blue-400 hover:text-blue-300">View all →</router-link>
+      </div>
+      <div v-if="requestsStore.loading" class="text-gray-400">Loading…</div>
       <div v-else-if="requestsStore.recentRequests.length === 0" class="text-gray-400">
-        No recent requests
+        No requests yet — search above to make your first.
       </div>
       <div v-else class="space-y-3">
-        <div
-          v-for="request in requestsStore.recentRequests"
-          :key="request.id"
-          class="border border-gray-600 rounded p-4 bg-gray-700"
-        >
+        <div v-for="request in requestsStore.recentRequests" :key="request.id"
+          class="border border-gray-600 rounded p-4 bg-gray-700">
           <div class="flex justify-between items-start">
             <div class="flex-1">
               <h3 class="font-medium text-white">{{ request.title }}</h3>
-              <p class="text-sm text-gray-300 mt-1">{{ request.description }}</p>
+              <p v-if="request.author" class="text-xs text-gray-400">{{ request.author }}</p>
               <div class="flex items-center mt-2 space-x-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
-                  {{ request.media_type }}
-                </span>
-                <span class="text-xs text-gray-400">
-                  {{ formatDate(request.created_at) }}
-                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">{{ request.media_type }}</span>
+                <span class="text-xs text-gray-400">{{ formatDate(request.created_at) }}</span>
               </div>
             </div>
-            <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusClasses(request.status)]">
-              {{ request.status }}
-            </span>
+            <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusClasses(request.status)]">{{ request.status }}</span>
           </div>
         </div>
       </div>
@@ -128,40 +69,47 @@
 </template>
 
 <script>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useRequestsStore } from '../stores/requests'
 import { getStatusClasses, formatDate } from '../utils/requestUtils'
 
+const MEDIA_TYPES = [
+  { value: 'book', label: 'Book' },
+  { value: 'audiobook', label: 'Audiobook' },
+  { value: 'movie', label: 'Movie' },
+  { value: 'tv_show', label: 'TV Show' },
+  { value: 'music', label: 'Music' },
+  { value: 'comic', label: 'Comic' },
+  { value: 'other', label: 'Other' },
+]
+
 export default {
   name: 'Dashboard',
   setup() {
+    const router = useRouter()
     const authStore = useAuthStore()
     const requestsStore = useRequestsStore()
 
+    const query = ref('')
+    const mediaType = ref('book')
+
     const totalRequests = computed(() => requestsStore.requests.length)
-    const pendingRequests = computed(() =>
-      requestsStore.requests.filter(req => req.status === 'PENDING').length
-    )
-    const approvedRequests = computed(() =>
-      requestsStore.requests.filter(req => req.status === 'APPROVED').length
-    )
+    const pendingRequests = computed(() => requestsStore.requests.filter(r => r.status === 'PENDING').length)
+    const fulfilledRequests = computed(() => requestsStore.requests.filter(r => r.status === 'FULFILLED').length)
+
+    const search = () => {
+      if (!query.value.trim()) return
+      router.push({ path: '/browse', query: { q: query.value.trim(), type: mediaType.value } })
+    }
 
     onMounted(async () => {
-      if (authStore.isAuthenticated) {
-        await requestsStore.fetchRequests()
-      }
+      if (authStore.isAuthenticated) await requestsStore.fetchRequests()
     })
 
-    return {
-      authStore,
-      requestsStore,
-      totalRequests,
-      pendingRequests,
-      approvedRequests,
-      getStatusClasses,
-      formatDate,
-    }
+    return { MEDIA_TYPES, query, mediaType, authStore, requestsStore,
+      totalRequests, pendingRequests, fulfilledRequests, search, getStatusClasses, formatDate }
   }
 }
 </script>

@@ -1,5 +1,5 @@
 from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean
 from sqlalchemy.sql import func
 from app.models import Base
 
@@ -19,5 +19,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.USER)
+    # Whether to email this user when one of their requests becomes available.
+    notify_on_available = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -134,7 +134,8 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useRequestsStore } from '../stores/requests'
 import { useMetadataStore } from '../stores/metadata'
 import RequestForm from '../components/RequestForm.vue'
@@ -155,6 +156,7 @@ export default {
     RequestForm
   },
   setup() {
+    const route = useRoute()
     const requestsStore = useRequestsStore()
     const metadataStore = useMetadataStore()
 
@@ -220,6 +222,15 @@ export default {
     const handleRequestCreated = () => {
       showSuccess('Request created successfully!')
     }
+
+    // Accept a handoff from the Dashboard search (/browse?q=…&type=…).
+    onMounted(() => {
+      if (route.query.q) {
+        searchQuery.value = String(route.query.q)
+        if (route.query.type) selectedMediaType.value = String(route.query.type)
+        performSearch()
+      }
+    })
 
     return {
       MEDIA_TYPES,

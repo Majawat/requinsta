@@ -59,7 +59,12 @@ def get_current_user(db: Session, token: str) -> Optional[User]:
     payload = verify_token(token)
     if not payload:
         return None
-    email = payload.get("sub")
-    if not email:
+    # Subject is the user id (stable across email changes).
+    user_id = payload.get("sub")
+    if user_id is None:
         return None
-    return db.query(User).filter(User.email == email).first()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return None
+    return db.query(User).filter(User.id == user_id).first()
