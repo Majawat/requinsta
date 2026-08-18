@@ -13,7 +13,7 @@
         <input v-model="password" type="password" required placeholder="••••••••" class="input" />
       </div>
 
-      <div v-if="error" class="flex items-start gap-2 text-red-300 text-sm bg-red-500/10 ring-1 ring-red-500/30 rounded-lg px-3 py-2">
+      <div v-if="error" class="flex items-start gap-2 text-rose-300 text-sm bg-rose-500/10 ring-1 ring-rose-400/30 rounded-lg px-3 py-2">
         <svg class="h-4 w-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
         {{ error }}
       </div>
@@ -23,9 +23,9 @@
       </button>
     </form>
 
-    <p class="mt-5 text-center text-sm text-gray-400">
+    <p class="mt-5 text-center text-sm text-slate-400">
       {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
-      <button @click="toggleMode" class="font-medium text-indigo-400 hover:text-indigo-300">
+      <button @click="toggleMode" class="font-semibold text-indigo-300 hover:text-indigo-200">
         {{ isLogin ? "Register" : "Sign in" }}
       </button>
     </p>

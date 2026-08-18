@@ -1,140 +1,82 @@
 <template>
-  <div class="space-y-6">
-    <!-- Page header -->
-    <div class="border-b border-gray-700 pb-4">
-      <h1 class="text-2xl font-bold text-white">Admin Panel</h1>
-      <p class="text-gray-400 mt-1">Manage requests and users</p>
+  <div class="space-y-5">
+    <!-- Header: Queue (day-to-day) vs Setup (configuration) -->
+    <div class="flex items-center justify-between">
+      <h1 class="text-[22px] font-bold tracking-tight">{{ isSetup ? 'Setup' : 'Queue' }}</h1>
+      <router-link
+        :to="isSetup ? '/admin' : '/admin/setup'"
+        class="btn-secondary btn-sm"
+      >
+        <svg v-if="!isSetup" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+        <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 5 8 12 15 19" /></svg>
+        {{ isSetup ? 'Back to queue' : 'Setup' }}
+      </router-link>
     </div>
 
-    <!-- Admin tabs -->
-    <div class="bg-gray-800 border border-gray-700 rounded-lg">
-      <div class="flex border-b border-gray-700">
-        <button
-          v-for="tab in tabs"
-          :key="tab.key"
-          @click="activeTab = tab.key"
-          :class="[
-            'px-4 py-3 text-sm font-medium transition-colors',
-            activeTab === tab.key
-              ? 'border-b-2 border-blue-500 text-blue-400'
-              : 'text-gray-400 hover:text-gray-200'
-          ]"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
+    <!-- Tabs (scoped to the active section) -->
+    <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none">
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        @click="activeTab = tab.key"
+        class="flex-none"
+        :class="activeTab === tab.key ? 'chip-active' : 'chip-idle'"
+      >
+        {{ tab.label }}
+        <span v-if="tab.badge" class="min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">{{ tab.badge }}</span>
+      </button>
     </div>
 
-    <!-- Request Management Tab -->
-    <div v-if="activeTab === 'requests'" class="space-y-4">
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <h2 class="text-lg font-medium text-white mb-4">Request Management</h2>
-        <AdminPanel :requests="requestsStore.requests" />
-      </div>
+    <!-- Requests queue -->
+    <div v-if="activeTab === 'requests'">
+      <AdminPanel :requests="requestsStore.requests" />
     </div>
 
-    <!-- Issues Tab -->
-    <div v-if="activeTab === 'issues'" class="space-y-4">
+    <!-- Issues queue -->
+    <div v-else-if="activeTab === 'issues'">
       <AdminIssues />
     </div>
 
-    <!-- User Management Tab -->
-    <div v-if="activeTab === 'users'" class="space-y-4">
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <h2 class="text-lg font-medium text-white mb-4">User Management</h2>
-        <UserManagement />
-      </div>
+    <!-- Users -->
+    <div v-else-if="activeTab === 'users'">
+      <UserManagement />
     </div>
 
-    <!-- Media Managers Tab -->
-    <div v-if="activeTab === 'managers'" class="space-y-4">
+    <!-- Media managers -->
+    <div v-else-if="activeTab === 'managers'">
       <MediaManagers />
     </div>
 
-    <!-- Plugins Tab -->
-    <div v-if="activeTab === 'plugins'" class="space-y-4">
+    <!-- Plugins -->
+    <div v-else-if="activeTab === 'plugins'">
       <Plugins />
     </div>
 
-    <!-- Settings Tab -->
-    <div v-if="activeTab === 'settings'" class="space-y-4">
+    <!-- Settings -->
+    <div v-else-if="activeTab === 'settings'">
       <AdminSettings />
     </div>
 
-    <!-- Statistics Tab -->
-    <div v-if="activeTab === 'stats'" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-sm font-medium text-gray-400">Total Users</p>
-              <p class="text-2xl font-semibold text-white">{{ totalUsers }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg class="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-sm font-medium text-gray-400">Total Requests</p>
-              <p class="text-2xl font-semibold text-white">{{ requestsStore.requests.length }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-sm font-medium text-gray-400">Pending</p>
-              <p class="text-2xl font-semibold text-white">{{ pendingRequests }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <svg class="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-5">
-              <p class="text-sm font-medium text-gray-400">Fulfilled</p>
-              <p class="text-2xl font-semibold text-white">{{ fulfilledRequests }}</p>
-            </div>
-          </div>
-        </div>
+    <!-- Statistics -->
+    <div v-else-if="activeTab === 'stats'" class="space-y-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="card p-4"><div class="text-2xl font-bold">{{ totalUsers }}</div><div class="text-xs text-slate-400 mt-0.5">Total users</div></div>
+        <div class="card p-4"><div class="text-2xl font-bold">{{ requestsStore.requests.length }}</div><div class="text-xs text-slate-400 mt-0.5">Total requests</div></div>
+        <div class="card p-4"><div class="text-2xl font-bold text-amber-300">{{ pendingRequests }}</div><div class="text-xs text-slate-400 mt-0.5">Pending</div></div>
+        <div class="card p-4"><div class="text-2xl font-bold text-emerald-300">{{ fulfilledRequests }}</div><div class="text-xs text-slate-400 mt-0.5">Fulfilled</div></div>
       </div>
 
-      <!-- Recent Activity -->
-      <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-        <h2 class="text-lg font-medium text-white mb-4">Recent Activity</h2>
-        <div class="space-y-3">
-          <div v-for="request in requestsStore.recentRequests" :key="request.id" class="flex items-center justify-between p-3 bg-gray-700 rounded">
-            <div>
-              <p class="text-white font-medium">{{ request.title }}</p>
-              <p class="text-sm text-gray-400">{{ request.description }}</p>
+      <div class="card p-5">
+        <h2 class="text-base font-semibold mb-3">Recent activity</h2>
+        <div class="divide-y divide-slate-800">
+          <div v-for="request in requestsStore.recentRequests" :key="request.id" class="flex items-center justify-between gap-3 py-2.5">
+            <div class="min-w-0">
+              <p class="font-semibold text-slate-100 truncate">{{ request.title }}</p>
+              <p class="text-sm text-slate-500 line-clamp-1">{{ request.description }}</p>
             </div>
-            <div class="text-right">
-              <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusClasses(request.status)]">
-                {{ request.status }}
-              </span>
-              <p class="text-xs text-gray-400 mt-1">{{ formatDate(request.created_at) }}</p>
+            <div class="text-right flex-none">
+              <StatusPill :status="request.status" small />
+              <p class="text-xs text-slate-500 mt-1">{{ formatDate(request.created_at) }}</p>
             </div>
           </div>
         </div>
@@ -144,10 +86,11 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useRequestsStore } from '../stores/requests'
-import { getStatusClasses, formatDate } from '../utils/requestUtils'
+import { formatDate } from '../utils/requestUtils'
 import { API_URL } from '../utils/api'
 import AdminPanel from '../components/AdminPanel.vue'
 import UserManagement from '../components/UserManagement.vue'
@@ -155,60 +98,62 @@ import AdminSettings from '../components/AdminSettings.vue'
 import MediaManagers from '../components/MediaManagers.vue'
 import Plugins from '../components/Plugins.vue'
 import AdminIssues from '../components/AdminIssues.vue'
+import StatusPill from '../components/ui/StatusPill.vue'
 
 export default {
   name: 'Admin',
-  components: {
-    AdminPanel,
-    UserManagement,
-    AdminSettings,
-    MediaManagers,
-    Plugins,
-    AdminIssues
-  },
+  components: { AdminPanel, UserManagement, AdminSettings, MediaManagers, Plugins, AdminIssues, StatusPill },
   setup() {
+    const route = useRoute()
     const requestsStore = useRequestsStore()
-    const activeTab = ref('requests')
     const totalUsers = ref(0)
 
-    const tabs = [
-      { key: 'requests', label: 'Requests' },
-      { key: 'issues', label: 'Issues' },
+    const isSetup = computed(() => route.meta.section === 'setup')
+
+    const pendingRequests = computed(() => requestsStore.requests.filter((r) => r.status === 'PENDING').length)
+    const openIssues = ref(0)
+
+    const queueTabs = computed(() => [
+      { key: 'requests', label: 'Requests', badge: pendingRequests.value || null },
+      { key: 'issues', label: 'Issues', badge: openIssues.value || null },
+    ])
+    const setupTabs = [
       { key: 'users', label: 'Users' },
-      { key: 'managers', label: 'Media Managers' },
+      { key: 'managers', label: 'Media managers' },
       { key: 'plugins', label: 'Plugins' },
       { key: 'settings', label: 'Settings' },
-      { key: 'stats', label: 'Statistics' }
+      { key: 'stats', label: 'Statistics' },
     ]
+    const tabs = computed(() => (isSetup.value ? setupTabs : queueTabs.value))
 
-    const pendingRequests = computed(() =>
-      requestsStore.requests.filter(req => req.status === 'PENDING').length
+    const activeTab = ref('requests')
+    // Reset to the first tab of the active section when the route section changes.
+    watch(
+      () => route.meta.section,
+      (section) => { activeTab.value = section === 'setup' ? 'users' : 'requests' },
+      { immediate: true }
     )
 
-    const fulfilledRequests = computed(() =>
-      requestsStore.requests.filter(req => req.status === 'FULFILLED').length
-    )
+    const fulfilledRequests = computed(() => requestsStore.requests.filter((r) => r.status === 'FULFILLED').length)
 
     onMounted(async () => {
       await requestsStore.fetchRequests()
       try {
         const { data } = await axios.get(`${API_URL}/admin/users`)
         totalUsers.value = data.length
-      } catch (e) {
-        console.error('Failed to fetch user count:', e)
-      }
+      } catch (e) { /* non-fatal */ }
+      try {
+        const { data } = await axios.get(`${API_URL}/issues/`)
+        openIssues.value = data.filter((i) => i.status !== 'RESOLVED').length
+      } catch (e) { /* non-fatal */ }
     })
 
-    return {
-      requestsStore,
-      activeTab,
-      tabs,
-      totalUsers,
-      pendingRequests,
-      fulfilledRequests,
-      getStatusClasses,
-      formatDate,
-    }
-  }
+    return { requestsStore, isSetup, tabs, activeTab, totalUsers, pendingRequests, fulfilledRequests, formatDate }
+  },
 }
 </script>
+
+<style scoped>
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+</style>

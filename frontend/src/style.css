@@ -8,41 +8,61 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-gray-900 text-gray-100;
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* canvas = slate-950, text = slate-100 (design Foundations) */
+    @apply bg-slate-950 text-slate-100;
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   /* Softer, consistent scrollbars in the dark theme */
   * {
-    scrollbar-color: #4b5563 transparent;
+    scrollbar-color: #334155 transparent;
   }
 }
 
 @layer components {
+  /* Surfaces */
   .card {
-    @apply bg-gray-800/80 border border-gray-700/80 rounded-xl;
+    @apply bg-slate-900 border border-slate-800 rounded-xl;
   }
   .card-hover {
-    @apply transition-colors hover:border-gray-600;
+    @apply transition-colors hover:border-slate-700;
   }
 
+  /* Buttons — 44px default hit target, one primary per screen region. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-           transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
+    @apply inline-flex items-center justify-center gap-2 h-11 px-[18px] rounded-lg text-sm font-semibold
+           transition-colors focus:outline-none focus-visible:ring-[3px] focus-visible:ring-indigo-500/25
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  .btn-primary { @apply btn bg-indigo-600 hover:bg-indigo-500 text-white focus:ring-indigo-500; }
-  .btn-ghost   { @apply btn bg-gray-700 hover:bg-gray-600 text-gray-100 focus:ring-gray-500; }
-  .btn-danger  { @apply btn bg-red-600 hover:bg-red-500 text-white focus:ring-red-500; }
-  .btn-sm      { @apply px-3 py-1.5 text-xs rounded-md; }
+  .btn-primary   { @apply btn bg-indigo-600 hover:bg-indigo-500 text-white; }
+  .btn-secondary { @apply btn bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200; }
+  .btn-deny      { @apply btn border border-rose-400/35 text-rose-300 hover:bg-rose-500/10; }
+  .btn-ghost     { @apply btn text-slate-400 hover:text-slate-200; }
+  /* Compact button — 32px, for inline row actions like "Request". */
+  .btn-sm        { @apply h-8 px-3 text-[13px] rounded-md gap-1.5; }
 
+  /* Inputs — 3px indigo focus halo + indigo border on every surface. */
   .input {
-    @apply block w-full px-3 py-2 bg-gray-900/60 border border-gray-600 rounded-lg text-white
-           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+    @apply block w-full h-11 px-3 bg-slate-800 border border-slate-700 rounded-lg text-[15px] text-slate-100
+           placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/20;
+  }
+  textarea.input,
+  select.input {
+    @apply h-auto py-2.5;
   }
 
-  .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  /* Status pill — dot + label, one colour per state (Foundations). */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
   }
 
-  .label { @apply block text-sm font-medium text-gray-300 mb-1; }
+  /* Filter / scope chip */
+  .chip {
+    @apply inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[13px] font-medium whitespace-nowrap;
+  }
+  .chip-idle   { @apply chip bg-slate-800 text-slate-400; }
+  .chip-active { @apply chip bg-indigo-500/15 text-indigo-200 ring-1 ring-indigo-500/40 font-semibold; }
+
+  .label   { @apply block text-sm font-medium text-slate-300 mb-1; }
+  /* Small uppercase section label used above lists. */
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500; }
 }
