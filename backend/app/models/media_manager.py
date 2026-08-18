@@ -34,5 +34,12 @@ class MediaManagerInstance(Base):
     quality_profile_id = Column(Integer, nullable=True)
     metadata_profile_id = Column(Integer, nullable=True)  # Readarr/Lidarr only
 
+    # How much to monitor when a request is pushed:
+    #   "item"       -> only the requested book/album (default; avoids monitoring
+    #                   an author's/artist's whole catalog off one request)
+    #   "collection" -> the whole author/artist
+    # Maps to the arr author/artist addOptions.monitor ("none" vs "all").
+    monitor_scope = Column(String, nullable=False, server_default="item", default="item")
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
