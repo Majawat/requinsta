@@ -32,20 +32,17 @@ Sketch:
   than raw types, which is closer to how the user thinks about it.
 
 ## 3. Manager monitor scope (Readarr author/series/book)
-**Observed:** requesting one book from an author currently monitors the author's
-*whole* catalog. Cause: `ReadarrManager.add()` (backend/app/plugins/readarr.py ~L182)
-sends the author with `monitored: True` and no per-book monitor scope, so Readarr
-applies its default (monitor all). Same shape will apply to Lidarr (artist vs album).
+**item vs collection: ✅ DONE** (migration 0008, PR #78). Per-instance
+`monitor_scope` = `item` (only the requested book/album, new default) | `collection`
+(whole author/artist), mapped to arr author/artist `addOptions.monitor` (`none`/`all`)
+in Readarr/Lidarr `add()`. Configurable in Setup → Media managers.
 
-Plan:
-- Per-manager-instance setting `default_monitor`: `single` | `series` | `author`
-  (Lidarr: `album` | `artist`). Map to Readarr author `addOptions.monitor`
-  (`none`/`specificBook`-style → monitor only the requested book; `all` → author) and
-  set sibling books `monitored: false` for the single case.
-- Optionally: let the requesting user choose scope at request time (a small control
-  on the result row / detail), gated by an admin "allow user to pick" toggle, and
-  "request all books for this author/series" as an explicit action.
-- Admin UI: expose `default_monitor` in **Setup → Media managers** per instance.
+**Still pending:**
+- **Series-level scope** (a third option between item and author): Readarr's add API
+  doesn't expose per-series monitoring cleanly — would need a post-add step (look up
+  the added book's series, monitor its other books). Not wired.
+- **User-selectable scope** at request time (gated by an admin "allow user to pick"
+  toggle), and an explicit "request all books for this author/series" action.
 
 ## Also pending (from the design pass)
 - Full slate restyle of the remaining admin sub-panels (UserManagement,
