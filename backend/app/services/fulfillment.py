@@ -2,10 +2,11 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.request import Request
+from app.models.request import Request, RequestStatus
 from app.models.media_manager import MediaManagerInstance
 from app.plugins.base import FulfillmentResult
 from app.plugins.media_manager_registry import media_manager_registry
+from app.services.notifications import notify_request_fulfilled
 
 
 def resolve_target_instance(
@@ -56,4 +57,14 @@ async def push_to_manager(
         request.external_ref = result.external_ref
     db.commit()
     db.refresh(request)
+
+    # If the manager reports the item is already available (e.g. already in the
+    # library), the request is fulfilled now — mark it and notify the requester.
+    if result.ok and result.status == "available":
+        request.status = RequestStatus.FULFILLED
+        db.commit()
+        db.refresh(request)
+        await notify_request_fulfilled(db, request)
+        db.refresh(request)
+
     return result
