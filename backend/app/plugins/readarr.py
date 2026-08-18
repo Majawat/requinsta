@@ -14,7 +14,9 @@ class ReadarrManager(MediaManager):
     """
 
     API = "/api/v1"
-    TIMEOUT = 20.0
+    # Cold metadata lookups (a new author/book the arr hasn't cached) can be slow
+    # because the arr fetches from its metadata backend live.
+    TIMEOUT = 60.0
 
     @property
     def service(self) -> str:
@@ -73,20 +75,60 @@ class ReadarrManager(MediaManager):
         return resp.json() if resp.status_code == 200 else []
 
     async def _lookup(self, config: Any, request: Any) -> Optional[Dict]:
-        # Readarr lookup takes a free-text term; author+title matches what a human
-        # would type. (Hardcover ids don't map to Readarr's Goodreads/edition ids,
-        # so we search by name rather than by external_id.)
-        term = request.title or ""
+        # Look the book up by term (author + title). When the metadata provider
+        # and this Readarr share an id space (e.g. a Hardcover-backed Bookshelf,
+        # where foreignBookId == the Hardcover id), prefer an exact id match so a
+        # noisy term search can't pick the wrong edition/"summary" book.
+        term = (request.title or "").strip()
         if getattr(request, "author", None):
-            term = f"{term} {request.author}"
-        term = term.strip()
+            term = f"{term} {request.author}".strip()
         if not term:
             return None
         resp = await self._get(config, "/book/lookup", term=term)
         if resp.status_code != 200:
             return None
         results = resp.json() or []
-        return results[0] if results else None
+        if not results:
+            return None
+
+        ext = str(getattr(request, "external_id", "") or "")
+        if ext:
+            for b in results:
+                if str(b.get("foreignBookId")) == ext:
+                    return b
+        return results[0]
+
+    async def _resolve_author_foreign_id(
+        self, config: Any, request: Any, book: Dict
+    ) -> Optional[str]:
+        # Stock Readarr embeds the author in the book lookup; some forks (Bookshelf)
+        # don't, so fall back to an author lookup by name.
+        embedded = (book.get("author") or {}).get("foreignAuthorId")
+        if embedded:
+            return embedded
+        name = (getattr(request, "author", None) or book.get("authorTitle") or "").strip()
+        if not name:
+            return None
+        resp = await self._get(config, "/author/lookup", term=name)
+        if resp.status_code != 200:
+            return None
+        authors = resp.json() or []
+        return authors[0].get("foreignAuthorId") if authors else None
+
+    async def _find_in_library(
+        self, config: Any, foreign_book_id: Any
+    ) -> Optional[Dict]:
+        """Return the library book with this foreignBookId, if it's already added."""
+        if not foreign_book_id:
+            return None
+        resp = await self._get(config, "/book")
+        if resp.status_code != 200:
+            return None
+        fid = str(foreign_book_id)
+        for b in resp.json() or []:
+            if str(b.get("foreignBookId")) == fid:
+                return b
+        return None
 
     async def add(self, config: Any, request: Any) -> FulfillmentResult:
         if config.root_folder_path is None or config.quality_profile_id is None:
@@ -104,20 +146,49 @@ class ReadarrManager(MediaManager):
                 ok=False, message=f"No Readarr match for '{request.title}'"
             )
 
-        author = dict(book.get("author") or {})
-        author.update(
-            {
-                "qualityProfileId": config.quality_profile_id,
-                "metadataProfileId": config.metadata_profile_id or 1,
-                "rootFolderPath": config.root_folder_path,
-                "monitored": True,
-                "addOptions": {"searchForMissingBooks": False},
-            }
-        )
+        # Already in the library? Don't re-add; report whether it's downloaded.
+        existing = await self._find_in_library(config, book.get("foreignBookId"))
+        if existing:
+            stats = existing.get("statistics") or {}
+            available = (stats.get("bookFileCount") or 0) > 0
+            return FulfillmentResult(
+                ok=True,
+                external_ref=str(existing.get("id")),
+                status="available" if available else "queued",
+                message="Already in the library"
+                + (" — available" if available else " — monitored, not yet downloaded"),
+            )
+
+        try:
+            author_fid = await self._resolve_author_foreign_id(config, request, book)
+        except httpx.HTTPError as e:
+            return FulfillmentResult(ok=False, message=f"Author lookup failed: {e}")
+        if not author_fid:
+            return FulfillmentResult(
+                ok=False, message=f"Could not resolve author for '{request.title}'"
+            )
+
         payload = dict(book)
+        # Some Readarr forks omit editions from lookup; Readarr's add needs one.
+        if not payload.get("editions") and payload.get("foreignEditionId"):
+            payload["editions"] = [
+                {
+                    "foreignEditionId": payload.get("foreignEditionId"),
+                    "title": payload.get("title"),
+                    "monitored": True,
+                    "manualAdd": True,
+                }
+            ]
         payload.update(
             {
-                "author": author,
+                "author": {
+                    "foreignAuthorId": author_fid,
+                    "qualityProfileId": config.quality_profile_id,
+                    "metadataProfileId": config.metadata_profile_id or 1,
+                    "rootFolderPath": config.root_folder_path,
+                    "monitored": True,
+                    "addOptions": {"searchForMissingBooks": False},
+                },
                 "monitored": True,
                 "addOptions": {"searchForNewBook": True},
             }
