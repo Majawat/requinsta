@@ -115,6 +115,39 @@ class LidarrManager(MediaManager):
                 return a
         return None
 
+    async def search(self, config: Any, query: str) -> list:
+        try:
+            resp = await self._get(config, "/album/lookup", term=query)
+        except httpx.HTTPError:
+            return []
+        if resp.status_code != 200:
+            return []
+        out = []
+        for a in resp.json() or []:
+            images = a.get("images") or []
+            cover = next((i.get("remoteUrl") for i in images if i.get("remoteUrl")), None) \
+                or a.get("remoteCover")
+            year = None
+            rd = a.get("releaseDate")
+            if rd:
+                try:
+                    year = int(str(rd)[:4])
+                except (ValueError, TypeError):
+                    year = None
+            artist = (a.get("artist") or {}).get("artistName") or ""
+            out.append(
+                {
+                    "title": a.get("title") or "",
+                    "author": artist,
+                    "year": year,
+                    "cover_url": cover,
+                    "description": a.get("overview") or "",
+                    "external_id": str(a.get("foreignAlbumId")) if a.get("foreignAlbumId") else None,
+                    "available": False,  # availability determined against the library
+                }
+            )
+        return out
+
     async def owned_external_ids(self, config: Any) -> set:
         try:
             resp = await self._get(config, "/album")
