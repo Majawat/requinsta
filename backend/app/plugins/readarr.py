@@ -217,6 +217,20 @@ class ReadarrManager(MediaManager):
             ok=False, message=f"Add rejected ({resp.status_code}): {resp.text[:200]}"
         )
 
+    async def owned_external_ids(self, config: Any) -> set:
+        try:
+            resp = await self._get(config, "/book")
+        except httpx.HTTPError:
+            return set()
+        if resp.status_code != 200:
+            return set()
+        owned = set()
+        for b in resp.json() or []:
+            stats = b.get("statistics") or {}
+            if (stats.get("bookFileCount") or 0) > 0 and b.get("foreignBookId") is not None:
+                owned.add(str(b.get("foreignBookId")))
+        return owned
+
     async def get_status(self, config: Any, external_ref: str) -> FulfillmentResult:
         try:
             resp = await self._get(config, f"/book/{external_ref}")

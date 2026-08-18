@@ -81,20 +81,33 @@
                 <p class="text-sm text-gray-300 mt-1">{{ result.author }}</p>
                 <p class="text-xs text-gray-400 mt-1">{{ result.year }}</p>
                 <p class="text-sm text-gray-300 mt-2 line-clamp-3">{{ result.description }}</p>
-                <div class="mt-2 flex gap-2">
+                <div class="mt-2 flex flex-wrap gap-2">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
                     {{ result.media_type }}
                   </span>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-200">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-600 text-gray-200">
                     {{ result.provider }}
+                  </span>
+                  <span v-if="result.availability === 'available'" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Available
+                  </span>
+                  <span v-else-if="result.availability === 'requested'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/15 text-yellow-300 ring-1 ring-yellow-500/30">
+                    Requested
                   </span>
                 </div>
               </div>
             </div>
             <div class="mt-4">
+              <div v-if="result.availability === 'available'" class="w-full text-center text-emerald-300 text-sm py-2">
+                ✓ Already in your library
+              </div>
+              <div v-else-if="result.availability === 'requested'" class="w-full text-center text-gray-400 text-sm py-2">
+                Already requested
+              </div>
               <button
+                v-else
                 @click="requestMedia(result)"
-                class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-md text-sm transition-colors"
               >
                 Request This Item
               </button>

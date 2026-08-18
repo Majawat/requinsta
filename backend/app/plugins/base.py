@@ -74,6 +74,13 @@ class MediaManager(ABC):
     async def get_status(self, config: Any, external_ref: str) -> FulfillmentResult:
         """Report whether the referenced item is downloaded/available yet."""
 
+    async def owned_external_ids(self, config: Any) -> set:
+        """External ids already in this manager's library *with files* — i.e.
+        genuinely available. External id is the provider id that matches the
+        manager's foreign id (e.g. Hardcover id == Bookshelf foreignBookId).
+        Default: empty (override if the manager can report its library)."""
+        return set()
+
 
 class NotificationResult(BaseModel):
     ok: bool
