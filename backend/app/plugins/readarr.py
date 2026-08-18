@@ -179,6 +179,12 @@ class ReadarrManager(MediaManager):
                     "manualAdd": True,
                 }
             ]
+        # monitor_scope controls how much of the author is monitored: "collection"
+        # monitors the whole author ("all"); anything else (default "item") monitors
+        # only the requested book, which is added monitored below.
+        author_monitor = (
+            "all" if getattr(config, "monitor_scope", "item") == "collection" else "none"
+        )
         payload.update(
             {
                 "author": {
@@ -187,7 +193,10 @@ class ReadarrManager(MediaManager):
                     "metadataProfileId": config.metadata_profile_id or 1,
                     "rootFolderPath": config.root_folder_path,
                     "monitored": True,
-                    "addOptions": {"searchForMissingBooks": False},
+                    "addOptions": {
+                        "searchForMissingBooks": False,
+                        "monitor": author_monitor,
+                    },
                 },
                 "monitored": True,
                 "addOptions": {"searchForNewBook": True},

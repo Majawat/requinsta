@@ -196,6 +196,11 @@ class LidarrManager(MediaManager):
                 ok=False, message=f"Could not resolve artist for '{request.title}'"
             )
 
+        # monitor_scope: "collection" monitors the whole artist ("all"); anything
+        # else (default "item") monitors only the requested album, added below.
+        artist_monitor = (
+            "all" if getattr(config, "monitor_scope", "item") == "collection" else "none"
+        )
         payload = dict(album)
         payload.update(
             {
@@ -205,7 +210,10 @@ class LidarrManager(MediaManager):
                     "metadataProfileId": config.metadata_profile_id or 1,
                     "rootFolderPath": config.root_folder_path,
                     "monitored": True,
-                    "addOptions": {"searchForMissingAlbums": False},
+                    "addOptions": {
+                        "searchForMissingAlbums": False,
+                        "monitor": artist_monitor,
+                    },
                 },
                 "monitored": True,
                 "addOptions": {"searchForNewAlbum": True},

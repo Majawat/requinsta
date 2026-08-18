@@ -23,6 +23,7 @@ class InstanceCreate(BaseModel):
     root_folder_path: Optional[str] = None
     quality_profile_id: Optional[int] = None
     metadata_profile_id: Optional[int] = None
+    monitor_scope: str = "item"  # "item" | "collection"
 
 
 class InstanceUpdate(BaseModel):
@@ -34,6 +35,7 @@ class InstanceUpdate(BaseModel):
     root_folder_path: Optional[str] = None
     quality_profile_id: Optional[int] = None
     metadata_profile_id: Optional[int] = None
+    monitor_scope: Optional[str] = None
 
 
 class InstanceResponse(BaseModel):
@@ -49,6 +51,7 @@ class InstanceResponse(BaseModel):
     root_folder_path: Optional[str] = None
     quality_profile_id: Optional[int] = None
     metadata_profile_id: Optional[int] = None
+    monitor_scope: str = "item"
 
 
 def _to_response(inst: MediaManagerInstance) -> InstanceResponse:
@@ -63,6 +66,7 @@ def _to_response(inst: MediaManagerInstance) -> InstanceResponse:
         root_folder_path=inst.root_folder_path,
         quality_profile_id=inst.quality_profile_id,
         metadata_profile_id=inst.metadata_profile_id,
+        monitor_scope=inst.monitor_scope or "item",
     )
 
 

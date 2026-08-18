@@ -24,6 +24,9 @@
               <span v-if="!inst.enabled" class="ml-2 text-xs text-yellow-400">disabled</span>
             </h3>
             <p class="text-sm text-gray-400">{{ inst.base_url }}</p>
+            <p v-if="scopeApplies(inst.service)" class="text-xs text-gray-500 mt-1">
+              Monitors: <span class="text-gray-300">{{ scopeLabel(inst) }}</span>
+            </p>
             <div class="mt-2 flex flex-wrap gap-1">
               <span
                 v-for="mt in inst.media_types"
@@ -67,6 +70,16 @@
                 <option :value="null">— select —</option>
                 <option v-for="p in options.metadata_profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
+            </div>
+            <div v-if="scopeApplies(inst.service)">
+              <label class="block text-sm text-gray-300">Monitor scope</label>
+              <select v-model="cfg.monitor_scope" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                <option value="item">{{ scopeOpts(inst.service).item }}</option>
+                <option value="collection">{{ scopeOpts(inst.service).collection }}</option>
+              </select>
+              <p class="text-xs text-gray-500 mt-1">
+                What {{ inst.service }} monitors &amp; searches when a request is approved. "{{ scopeOpts(inst.service).item }}" avoids pulling in the whole {{ inst.service === 'lidarr' ? 'artist' : 'author' }}.
+              </p>
             </div>
             <div class="flex gap-2 justify-end">
               <button @click="configuringId = null" class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-500">Cancel</button>
@@ -138,8 +151,20 @@ const MEDIA_TYPES = [
   { value: 'tv_show', label: 'TV Show' },
   { value: 'music', label: 'Music' },
   { value: 'comic', label: 'Comic' },
+  { value: 'podcast', label: 'Podcast' },
   { value: 'other', label: 'Other' },
 ]
+
+// Monitor scope only applies to the arr adapters that add an item under a parent
+// (book→author, album→artist). Labels are service-aware.
+const SCOPE_LABELS = {
+  readarr: { item: 'Just this book', collection: 'Whole author' },
+  lidarr: { item: 'Just this album', collection: 'Whole artist' },
+  _default: { item: 'Just this item', collection: 'Whole collection' },
+}
+const scopeApplies = (service) => service === 'readarr' || service === 'lidarr'
+const scopeOpts = (service) => SCOPE_LABELS[service] || SCOPE_LABELS._default
+const scopeLabel = (inst) => scopeOpts(inst.service)[inst.monitor_scope || 'item']
 
 export default {
   name: 'MediaManagers',
@@ -156,7 +181,7 @@ export default {
     const configuringId = ref(null)
     const options = reactive({ root_folders: [], quality_profiles: [], metadata_profiles: [] })
     const optionsError = ref('')
-    const cfg = reactive({ root_folder_path: null, quality_profile_id: null, metadata_profile_id: null })
+    const cfg = reactive({ root_folder_path: null, quality_profile_id: null, metadata_profile_id: null, monitor_scope: 'item' })
 
     const canCreate = computed(() =>
       form.service && form.name.trim() && form.base_url.trim() && form.media_types.length > 0
@@ -211,6 +236,7 @@ export default {
         root_folder_path: inst.root_folder_path,
         quality_profile_id: inst.quality_profile_id,
         metadata_profile_id: inst.metadata_profile_id,
+        monitor_scope: inst.monitor_scope || 'item',
       })
       try {
         const { data } = await axios.get(`${API_URL}/media-managers/${inst.id}/options`)
@@ -226,6 +252,7 @@ export default {
           root_folder_path: cfg.root_folder_path,
           quality_profile_id: cfg.quality_profile_id,
           metadata_profile_id: cfg.metadata_profile_id,
+          monitor_scope: cfg.monitor_scope,
         })
         configuringId.value = null
         await load()
@@ -252,6 +279,7 @@ export default {
       MEDIA_TYPES, instances, services, testResults, form, saving, message, messageOk,
       canCreate, createInstance, testInstance, deleteInstance,
       configuringId, options, optionsError, cfg, beginConfigure, saveConfigure,
+      scopeApplies, scopeOpts, scopeLabel,
     }
   },
 }
