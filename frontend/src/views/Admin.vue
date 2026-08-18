@@ -33,6 +33,11 @@
       </div>
     </div>
 
+    <!-- Issues Tab -->
+    <div v-if="activeTab === 'issues'" class="space-y-4">
+      <AdminIssues />
+    </div>
+
     <!-- User Management Tab -->
     <div v-if="activeTab === 'users'" class="space-y-4">
       <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
@@ -149,6 +154,7 @@ import UserManagement from '../components/UserManagement.vue'
 import AdminSettings from '../components/AdminSettings.vue'
 import MediaManagers from '../components/MediaManagers.vue'
 import Plugins from '../components/Plugins.vue'
+import AdminIssues from '../components/AdminIssues.vue'
 
 export default {
   name: 'Admin',
@@ -157,7 +163,8 @@ export default {
     UserManagement,
     AdminSettings,
     MediaManagers,
-    Plugins
+    Plugins,
+    AdminIssues
   },
   setup() {
     const requestsStore = useRequestsStore()
@@ -166,6 +173,7 @@ export default {
 
     const tabs = [
       { key: 'requests', label: 'Requests' },
+      { key: 'issues', label: 'Issues' },
       { key: 'users', label: 'Users' },
       { key: 'managers', label: 'Media Managers' },
       { key: 'plugins', label: 'Plugins' },

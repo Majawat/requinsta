@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -43,6 +44,7 @@ class RequestResponse(BaseModel):
     external_ref: Optional[str] = None
     fulfillment_detail: Optional[str] = None
     fulfillment_notified: bool = False
+    created_at: Optional[datetime] = None
 
 
 @router.get("/", response_model=List[RequestResponse])
