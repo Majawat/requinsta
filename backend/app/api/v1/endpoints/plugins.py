@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
@@ -266,6 +267,9 @@ def update_plugin_config(
     return _config_response(db, descriptor)
 
 
+logger = logging.getLogger(__name__)
+
+
 @router.post("/{plugin_type}/{key}/test")
 async def test_plugin(
     plugin_type: str,
@@ -289,8 +293,15 @@ async def test_plugin(
         media_type = (descriptor.media_types or ["book"])[0]
         try:
             results = await obj.search("the lord of the rings", media_type)
-        except Exception as e:  # noqa: BLE001
-            return {"ok": False, "message": f"Search failed: {e}"}
+        except Exception:  # noqa: BLE001
+            # Log the full detail server-side; return only the exception class to
+            # the admin as a hint. Never surface the exception message/traceback in
+            # the response (py/stack-trace-exposure — CWE-209).
+            logger.exception("Metadata provider test search failed for %s/%s", plugin_type, key)
+            return {
+                "ok": False,
+                "message": "Search failed — check the API key/token and URL (see server logs for details).",
+            }
         n = len(results)
         return {
             "ok": n > 0,
