@@ -18,6 +18,7 @@ from app.plugins.hardcover import HardcoverProvider
 from app.plugins.openlibrary import OpenLibraryProvider
 from app.plugins.tmdb import TMDBProvider
 from app.plugins.readarr import ReadarrManager
+from app.plugins.lidarr import LidarrManager
 from app.plugins.email_notifier import EmailNotifier
 
 _ALL_MEDIA_TYPES = ["book", "audiobook", "movie", "tv_show", "music", "comic", "other"]
@@ -86,6 +87,26 @@ def _builtin_descriptors():
                 ConfigField(key="api_key", label="API Key", type="password", required=True, secret=True),
                 ConfigField(key="media_types", label="Media Types", type="multiselect",
                             options=["book", "audiobook"]),
+                ConfigField(key="root_folder_path", label="Root Folder", type="select",
+                            help="loaded from the instance"),
+                ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
+                ConfigField(key="metadata_profile_id", label="Metadata Profile", type="select"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=MEDIA_MANAGER,
+            key="lidarr",
+            display_name="Lidarr",
+            version="1.0.0",
+            obj=LidarrManager(),
+            config_scope=CONFIG_INSTANCE,
+            media_types=["music"],
+            config_schema=[
+                ConfigField(key="base_url", label="Base URL", type="string", required=True,
+                            help="e.g. http://192.168.1.10:8686"),
+                ConfigField(key="api_key", label="API Key", type="password", required=True, secret=True),
+                ConfigField(key="media_types", label="Media Types", type="multiselect",
+                            options=["music"]),
                 ConfigField(key="root_folder_path", label="Root Folder", type="select",
                             help="loaded from the instance"),
                 ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
