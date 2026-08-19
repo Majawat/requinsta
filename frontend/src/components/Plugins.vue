@@ -1,25 +1,25 @@
 <template>
-  <div class="space-y-6">
-    <div class="border-b border-gray-700 pb-4">
-      <h2 class="text-xl font-bold text-white">Plugins</h2>
-      <p class="text-gray-400 mt-1">
-        Installed connectors. Built-ins ship with Requinsta; drop a <code class="text-gray-300">.py</code>
-        file into the mounted <code class="text-gray-300">/plugins</code> folder to add your own.
+  <div class="space-y-5">
+    <div>
+      <h2 class="text-base font-semibold">Plugins</h2>
+      <p class="text-sm text-slate-400 mt-0.5">
+        Installed connectors. Built-ins ship with Requinsta; drop a <code class="text-slate-300 font-mono text-xs">.py</code>
+        file into the mounted <code class="text-slate-300 font-mono text-xs">/plugins</code> folder to add your own.
       </p>
     </div>
 
     <!-- Search source per media type -->
-    <div class="card p-4" v-if="Object.keys(selection.options).length">
-      <h3 class="text-lg font-medium text-white mb-1">Search Source per Media Type</h3>
-      <p class="text-sm text-gray-400 mb-3">
+    <div class="card p-5" v-if="Object.keys(selection.options).length">
+      <h3 class="text-base font-semibold mb-1">Search source per media type</h3>
+      <p class="text-sm text-slate-400 mb-3">
         By default each type searches its media manager directly — so results are
         exactly what can be added, with accurate availability. Optionally override
         with a standalone metadata provider.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div v-for="(opts, mt) in selection.options" :key="mt">
-          <label class="block text-sm text-gray-300 capitalize">{{ mt.replace('_', ' ') }}</label>
-          <select v-model="selection.active[mt]" @change="saveSelection" class="input mt-1">
+          <label class="label capitalize">{{ mt.replace('_', ' ') }}</label>
+          <select v-model="selection.active[mt]" @change="saveSelection" class="input">
             <option value="">Media manager (default)</option>
             <option v-for="o in opts" :key="o.id" :value="o.id">{{ o.label }}</option>
           </select>
@@ -28,108 +28,87 @@
     </div>
 
     <div v-for="group in groups" :key="group.type" v-show="group.items.length">
-      <h3 class="text-lg font-medium text-white mb-3">{{ group.label }}</h3>
+      <h3 class="eyebrow mb-2.5">{{ group.label }}</h3>
       <div class="space-y-3">
-        <div
-          v-for="p in group.items"
-          :key="p.id"
-          class="bg-gray-800 border border-gray-700 p-4 rounded-lg"
-        >
-          <div class="flex justify-between items-start">
-            <div>
-              <h4 class="font-medium text-white">
-                {{ p.display_name }} <span class="text-xs text-gray-500">v{{ p.version }}</span>
+        <div v-for="p in group.items" :key="p.id" class="card p-4">
+          <div class="flex justify-between items-start gap-3">
+            <div class="min-w-0">
+              <h4 class="font-semibold text-slate-100">
+                {{ p.display_name }} <span class="text-xs font-normal text-slate-500">v{{ p.version }}</span>
               </h4>
-              <p v-if="p.media_types" class="mt-1 flex flex-wrap gap-1">
-                <span v-for="mt in p.media_types" :key="mt" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-900 text-blue-200">{{ mt }}</span>
+              <p v-if="p.media_types" class="mt-1.5 flex flex-wrap gap-1">
+                <span v-for="mt in p.media_types" :key="mt" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-300">{{ mt }}</span>
               </p>
             </div>
-            <div class="flex items-center gap-2">
-              <span :class="['px-2 py-0.5 rounded-full text-xs font-medium', p.configured ? 'bg-green-900 text-green-200' : 'bg-gray-600 text-gray-300']">
+            <div class="flex items-center gap-2 flex-none">
+              <span class="pill" :class="p.configured ? 'bg-emerald-400/15 text-emerald-300 ring-1 ring-emerald-400/25' : 'bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40'">
                 {{ p.configured ? 'Configured' : 'Not configured' }}
               </span>
-              <span :class="['px-2 py-0.5 rounded-full text-xs', p.source === 'builtin' ? 'bg-gray-700 text-gray-300' : 'bg-purple-900 text-purple-200']">{{ p.source }}</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono uppercase" :class="p.source === 'builtin' ? 'bg-slate-800 text-slate-400' : 'bg-indigo-500/15 text-indigo-300'">{{ p.source }}</span>
               <button
                 v-if="p.config_scope === 'global'"
                 @click="openId === p.id ? closeConfig() : openConfig(p)"
-                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                class="btn-secondary btn-sm"
               >{{ openId === p.id ? 'Close' : 'Configure' }}</button>
             </div>
           </div>
 
-          <p v-if="p.config_scope === 'instance'" class="mt-2 text-xs text-gray-400">
-            Managed under the <span class="text-gray-300">Media Managers</span> tab
+          <p v-if="p.config_scope === 'instance'" class="mt-2 text-xs text-slate-400">
+            Managed under the <span class="text-slate-300">Media Managers</span> tab
             <template v-if="p.instance_count"> — {{ p.instance_count }} instance{{ p.instance_count === 1 ? '' : 's' }}</template>.
           </p>
-          <p v-else-if="p.config_scope === 'none'" class="mt-2 text-xs text-gray-400">No configuration needed.</p>
+          <p v-else-if="p.config_scope === 'none'" class="mt-2 text-xs text-slate-400">No configuration needed.</p>
 
           <!-- Schema-driven config form -->
-          <div v-if="openId === p.id && cfg" class="mt-4 border-t border-gray-700 pt-4 space-y-3">
+          <div v-if="openId === p.id && cfg" class="mt-4 border-t border-slate-800 pt-4 space-y-3">
             <div v-for="f in cfg.fields" :key="f.key">
-              <label class="block text-sm text-gray-300">
-                {{ f.label }} <span v-if="f.required" class="text-red-400">*</span>
+              <label class="label">
+                {{ f.label }} <span v-if="f.required" class="text-rose-400">*</span>
               </label>
 
-              <input
-                v-if="['string'].includes(f.type)"
-                v-model="form[f.key]" type="text"
-                class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
-
-              <input
-                v-else-if="f.type === 'number'"
-                v-model="form[f.key]" type="number"
-                class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
-
+              <input v-if="['string'].includes(f.type)" v-model="form[f.key]" type="text" class="input" />
+              <input v-else-if="f.type === 'number'" v-model="form[f.key]" type="number" class="input" />
               <input
                 v-else-if="f.type === 'password'"
                 v-model="form[f.key]" type="password"
                 :placeholder="f.is_set ? '•••••• (unchanged)' : ''"
-                class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+                class="input" />
 
-              <label v-else-if="f.type === 'boolean'" class="mt-1 inline-flex items-center text-sm text-gray-300">
-                <input type="checkbox" v-model="form[f.key]" class="mr-2" /> Enabled
+              <label v-else-if="f.type === 'boolean'" class="inline-flex items-center gap-2 text-sm text-slate-300">
+                <input type="checkbox" v-model="form[f.key]" class="accent-indigo-600 w-4 h-4" /> Enabled
               </label>
 
-              <select
-                v-else-if="f.type === 'select'"
-                v-model="form[f.key]"
-                class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+              <select v-else-if="f.type === 'select'" v-model="form[f.key]" class="input">
                 <option v-for="o in (f.options || [])" :key="o" :value="o">{{ o }}</option>
               </select>
 
-              <div v-else-if="f.type === 'multiselect'" class="mt-1 flex flex-wrap gap-3">
-                <label v-for="o in (f.options || [])" :key="o" class="inline-flex items-center text-sm text-gray-300">
-                  <input type="checkbox" :value="o" v-model="form[f.key]" class="mr-1" /> {{ o }}
+              <div v-else-if="f.type === 'multiselect'" class="flex flex-wrap gap-3">
+                <label v-for="o in (f.options || [])" :key="o" class="inline-flex items-center gap-1.5 text-sm text-slate-300">
+                  <input type="checkbox" :value="o" v-model="form[f.key]" class="accent-indigo-600 w-4 h-4" /> {{ o }}
                 </label>
               </div>
 
-              <input
-                v-else
-                v-model="form[f.key]" type="text"
-                class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" />
+              <input v-else v-model="form[f.key]" type="text" class="input" />
 
-              <p v-if="f.help" class="mt-1 text-xs text-gray-400">{{ f.help }}</p>
+              <p v-if="f.help" class="mt-1 text-xs text-slate-500">{{ f.help }}</p>
             </div>
 
-            <p v-if="testResult" :class="['text-sm', testResult.ok ? 'text-green-400' : 'text-red-400']">{{ testResult.message }}</p>
+            <p v-if="testResult" :class="['text-sm', testResult.ok ? 'text-emerald-300' : 'text-rose-300']">{{ testResult.message }}</p>
 
             <div class="flex justify-end gap-2">
-              <button
-                v-if="cfg.testable"
-                @click="testPlugin(p)" :disabled="testing"
-                class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-500 disabled:opacity-50"
-              >{{ testing ? 'Testing…' : 'Test' }}</button>
-              <button
-                @click="saveConfig(p)" :disabled="saving"
-                class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              >{{ saving ? 'Saving…' : 'Save' }}</button>
+              <button v-if="cfg.testable" @click="testPlugin(p)" :disabled="testing" class="btn-secondary btn-sm">
+                {{ testing ? 'Testing…' : 'Test' }}
+              </button>
+              <button @click="saveConfig(p)" :disabled="saving" class="btn-primary btn-sm">
+                {{ saving ? 'Saving…' : 'Save' }}
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="message" class="p-4 rounded-lg" :class="messageOk ? 'bg-green-900 text-green-100' : 'bg-red-900 text-red-100'">{{ message }}</div>
+    <div v-if="message" class="p-4 rounded-lg text-sm" :class="messageOk ? 'bg-emerald-500/10 text-emerald-200 border border-emerald-400/30' : 'bg-rose-500/10 text-rose-200 border border-rose-400/30'">{{ message }}</div>
   </div>
 </template>
 
