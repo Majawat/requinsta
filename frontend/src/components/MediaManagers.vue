@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-6">
-    <div class="border-b border-gray-700 pb-4">
-      <h2 class="text-xl font-bold text-white">Media Managers</h2>
-      <p class="text-gray-400 mt-1">
+  <div class="space-y-5">
+    <div>
+      <h2 class="text-base font-semibold">Media managers</h2>
+      <p class="text-sm text-slate-400 mt-0.5">
         Connect Readarr/Radarr/etc. instances. Approved requests for a matching
         media type can be pushed here automatically. With none configured,
         requests still work as a manual approval queue.
@@ -11,129 +11,125 @@
 
     <!-- Existing instances -->
     <div class="space-y-3">
-      <div
-        v-for="inst in instances"
-        :key="inst.id"
-        class="bg-gray-800 border border-gray-700 p-4 rounded-lg"
-      >
-        <div class="flex justify-between items-start">
-          <div>
-            <h3 class="font-medium text-white">
+      <div v-for="inst in instances" :key="inst.id" class="card p-4">
+        <div class="flex justify-between items-start gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-slate-100">
               {{ inst.name }}
-              <span class="text-xs text-gray-400">({{ inst.service }})</span>
-              <span v-if="!inst.enabled" class="ml-2 text-xs text-yellow-400">disabled</span>
+              <span class="text-xs font-normal text-slate-400">({{ inst.service }})</span>
+              <span v-if="!inst.enabled" class="ml-2 text-xs text-amber-300">disabled</span>
             </h3>
-            <p class="text-sm text-gray-400">{{ inst.base_url }}</p>
-            <p v-if="scopeApplies(inst.service)" class="text-xs text-gray-500 mt-1">
-              Monitors: <span class="text-gray-300">{{ scopeLabel(inst) }}</span>
+            <p class="text-sm text-slate-400 truncate">{{ inst.base_url }}</p>
+            <p v-if="scopeApplies(inst.service)" class="text-xs text-slate-500 mt-1">
+              Monitors: <span class="text-slate-300">{{ scopeLabel(inst) }}</span>
             </p>
             <div class="mt-2 flex flex-wrap gap-1">
               <span
                 v-for="mt in inst.media_types"
                 :key="mt"
-                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-900 text-blue-200"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-300"
               >{{ mt }}</span>
             </div>
           </div>
-          <div class="flex gap-2">
-            <button @click="testInstance(inst)" class="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-500">Test</button>
-            <button @click="beginConfigure(inst)" class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Configure</button>
-            <button @click="deleteInstance(inst)" class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+          <div class="flex gap-2 flex-none">
+            <button @click="testInstance(inst)" class="btn-secondary btn-sm">Test</button>
+            <button @click="beginConfigure(inst)" class="btn-primary btn-sm">Configure</button>
+            <button @click="deleteInstance(inst)" class="btn-deny btn-sm">Delete</button>
           </div>
         </div>
 
-        <p v-if="testResults[inst.id]" :class="['mt-2 text-sm', testResults[inst.id].ok ? 'text-green-400' : 'text-red-400']">
+        <p v-if="testResults[inst.id]" :class="['mt-2 text-sm', testResults[inst.id].ok ? 'text-emerald-300' : 'text-rose-300']">
           {{ testResults[inst.id].message }}
         </p>
 
         <!-- Configure: root folder + profiles pulled live from the instance -->
-        <div v-if="configuringId === inst.id" class="mt-4 border-t border-gray-700 pt-4 space-y-3">
-          <p v-if="optionsError" class="text-sm text-red-400">{{ optionsError }}</p>
+        <div v-if="configuringId === inst.id" class="mt-4 border-t border-slate-800 pt-4 space-y-3">
+          <p v-if="optionsError" class="text-sm text-rose-300">{{ optionsError }}</p>
           <template v-else>
             <div>
-              <label class="block text-sm text-gray-300">Root Folder</label>
-              <select v-model="cfg.root_folder_path" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+              <label class="label">Root folder</label>
+              <select v-model="cfg.root_folder_path" class="input">
                 <option :value="null">— select —</option>
                 <option v-for="r in options.root_folders" :key="r.id" :value="r.path">{{ r.path }}</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm text-gray-300">Quality Profile</label>
-              <select v-model="cfg.quality_profile_id" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+              <label class="label">Quality profile</label>
+              <select v-model="cfg.quality_profile_id" class="input">
                 <option :value="null">— select —</option>
                 <option v-for="p in options.quality_profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
             </div>
             <div v-if="options.metadata_profiles.length">
-              <label class="block text-sm text-gray-300">Metadata Profile</label>
-              <select v-model="cfg.metadata_profile_id" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+              <label class="label">Metadata profile</label>
+              <select v-model="cfg.metadata_profile_id" class="input">
                 <option :value="null">— select —</option>
                 <option v-for="p in options.metadata_profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
               </select>
             </div>
             <div v-if="scopeApplies(inst.service)">
-              <label class="block text-sm text-gray-300">Monitor scope</label>
-              <select v-model="cfg.monitor_scope" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+              <label class="label">Monitor scope</label>
+              <select v-model="cfg.monitor_scope" class="input">
                 <option value="item">{{ scopeOpts(inst.service).item }}</option>
                 <option value="collection">{{ scopeOpts(inst.service).collection }}</option>
               </select>
-              <p class="text-xs text-gray-500 mt-1">
+              <p class="text-xs text-slate-500 mt-1">
                 What {{ inst.service }} monitors &amp; searches when a request is approved. "{{ scopeOpts(inst.service).item }}" avoids pulling in the whole {{ inst.service === 'lidarr' ? 'artist' : 'author' }}.
               </p>
             </div>
             <div class="flex gap-2 justify-end">
-              <button @click="configuringId = null" class="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-500">Cancel</button>
-              <button @click="saveConfigure(inst)" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+              <button @click="configuringId = null" class="btn-ghost btn-sm">Cancel</button>
+              <button @click="saveConfigure(inst)" class="btn-primary btn-sm">Save</button>
             </div>
           </template>
         </div>
       </div>
 
-      <div v-if="instances.length === 0" class="text-center text-gray-400 py-6">
+      <div v-if="instances.length === 0" class="card p-6 text-center text-slate-400 text-sm">
         No media managers configured yet.
       </div>
     </div>
 
     <!-- Add new instance -->
-    <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-      <h3 class="text-lg font-medium text-white mb-4">Add Media Manager</h3>
+    <div class="card p-5">
+      <h3 class="text-base font-semibold mb-4">Add media manager</h3>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm text-gray-300">Service</label>
-          <select v-model="form.service" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+          <label class="label">Service</label>
+          <select v-model="form.service" class="input">
             <option v-for="s in services" :key="s" :value="s">{{ s }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm text-gray-300">Name</label>
-          <input v-model="form.name" placeholder="e.g. Readarr - Audiobooks" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+          <label class="label">Name</label>
+          <input v-model="form.name" placeholder="e.g. Readarr - Audiobooks" class="input" />
         </div>
         <div>
-          <label class="block text-sm text-gray-300">Base URL</label>
-          <input v-model="form.base_url" placeholder="http://192.168.1.10:8787" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+          <label class="label">Base URL</label>
+          <input v-model="form.base_url" placeholder="http://192.168.1.10:8787" class="input" />
         </div>
         <div>
-          <label class="block text-sm text-gray-300">API Key</label>
-          <input v-model="form.api_key" type="password" placeholder="Instance API key" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400" />
+          <label class="label">API key</label>
+          <input v-model="form.api_key" type="password" placeholder="Instance API key" class="input" />
         </div>
         <div>
-          <label class="block text-sm text-gray-300 mb-1">Media Types</label>
+          <label class="label">Media types</label>
           <div class="flex flex-wrap gap-3">
-            <label v-for="mt in MEDIA_TYPES" :key="mt.value" class="inline-flex items-center text-sm text-gray-300">
-              <input type="checkbox" :value="mt.value" v-model="form.media_types" class="mr-1" />
+            <label v-for="mt in MEDIA_TYPES" :key="mt.value" class="inline-flex items-center gap-1.5 text-sm text-slate-300">
+              <input type="checkbox" :value="mt.value" v-model="form.media_types" class="accent-indigo-600 w-4 h-4" />
               {{ mt.label }}
             </label>
           </div>
         </div>
         <div class="flex justify-end">
-          <button @click="createInstance" :disabled="!canCreate || saving" class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md">
-            {{ saving ? 'Adding...' : 'Add Manager' }}
+          <button @click="createInstance" :disabled="!canCreate || saving" class="btn-primary">
+            {{ saving ? 'Adding…' : 'Add manager' }}
           </button>
         </div>
       </div>
     </div>
 
-    <div v-if="message" class="p-4 rounded-lg" :class="messageOk ? 'bg-green-900 text-green-100' : 'bg-red-900 text-red-100'">
+    <div v-if="message" class="p-4 rounded-lg text-sm" :class="messageOk ? 'bg-emerald-500/10 text-emerald-200 border border-emerald-400/30' : 'bg-rose-500/10 text-rose-200 border border-rose-400/30'">
       {{ message }}
     </div>
   </div>
