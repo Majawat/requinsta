@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -29,6 +31,8 @@ class UserResponse(BaseModel):
     id: int
     email: str
     role: UserRole
+    # NULL/empty => unrestricted; otherwise the media types this user may request.
+    allowed_media_types: Optional[List[str]] = None
 
 
 @router.post("/register", response_model=UserResponse)
@@ -68,4 +72,9 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_authenticated_user)):
-    return UserResponse(id=current_user.id, email=current_user.email, role=current_user.role)
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        role=current_user.role,
+        allowed_media_types=current_user.allowed_media_types,
+    )

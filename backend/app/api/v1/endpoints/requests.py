@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from app.models import get_db
 from app.models.request import Request, RequestStatus, MediaType
 from app.models.user import User, UserRole
-from app.api.v1.deps import get_authenticated_user
+from app.api.v1.deps import get_authenticated_user, require_media_type_access
 
 router = APIRouter()
 
@@ -63,6 +63,7 @@ async def create_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_authenticated_user),
 ):
+    require_media_type_access(current_user, request_data.media_type.value)
     request = Request(
         user_id=current_user.id,
         title=request_data.title,

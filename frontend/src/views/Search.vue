@@ -118,7 +118,7 @@
       <div class="eyebrow mt-5 mb-2.5">Or pick a type</div>
       <div class="grid grid-cols-2 gap-2.5">
         <button
-          v-for="t in TYPE_CARDS"
+          v-for="t in visibleTypeCards"
           :key="t.value"
           class="h-[54px] rounded-[10px] bg-slate-900 border border-slate-800 hover:border-slate-700 flex items-center gap-2.5 px-3.5 transition-colors"
           :class="typeScope === t.value ? 'ring-1 ring-indigo-500/50 border-indigo-500/40' : ''"
@@ -188,7 +188,7 @@
               <div>
                 <label class="label">Type</label>
                 <select v-model="manual.media_type" class="input">
-                  <option v-for="t in TYPE_CARDS" :key="t.value" :value="t.value">{{ t.label }}</option>
+                  <option v-for="t in visibleTypeCards" :key="t.value" :value="t.value">{{ t.label }}</option>
                 </select>
               </div>
               <div>
@@ -237,6 +237,20 @@ export default {
     // sections must narrow to the signed-in user.
     const mine = computed(() => requestsStore.requests.filter((r) => r.user_id === authStore.user?.id))
 
+    // Per-user media-type access. null => unrestricted (admins, or no list set).
+    const allowedTypes = computed(() => {
+      const a = authStore.user?.allowed_media_types
+      if (authStore.isAdmin || !a || !a.length) return null
+      return a
+    })
+    const visibleTypeCards = computed(() =>
+      allowedTypes.value ? TYPE_CARDS.filter((t) => allowedTypes.value.includes(t.value)) : TYPE_CARDS
+    )
+    const defaultType = computed(() => {
+      if (!allowedTypes.value) return 'book'
+      return allowedTypes.value.includes('book') ? 'book' : (visibleTypeCards.value[0]?.value || 'book')
+    })
+
     const query = ref('')
     const typeScope = ref('')
     const hasSearched = ref(false)
@@ -276,11 +290,15 @@ export default {
     const runSearch = async (t) => {
       if (t !== undefined) typeScope.value = t
       if (!query.value.trim()) return
+      // Clamp an out-of-policy scope (e.g. a shared ?type= link) to an allowed type.
+      if (allowedTypes.value && typeScope.value && !allowedTypes.value.includes(typeScope.value)) {
+        typeScope.value = ''
+      }
       hasSearched.value = true
       lastQuery.value = query.value.trim()
       // keep the URL shareable / back-friendly
       router.replace({ query: { q: lastQuery.value, ...(typeScope.value ? { type: typeScope.value } : {}) } })
-      await metadataStore.searchMetadata(lastQuery.value, typeScope.value || 'book')
+      await metadataStore.searchMetadata(lastQuery.value, typeScope.value || defaultType.value)
       await nextTick()
       resultInput.value?.focus?.()
     }
@@ -329,7 +347,7 @@ export default {
     const manualSubmitting = ref(false)
     const openManual = () => {
       manual.title = lastQuery.value || query.value
-      manual.media_type = typeScope.value || 'book'
+      manual.media_type = typeScope.value || defaultType.value
       manual.description = ''
       showManual.value = true
     }
@@ -361,7 +379,7 @@ export default {
     })
 
     return {
-      TYPE_CARDS, query, typeScope, hasSearched, lastQuery, idleInput, resultInput,
+      TYPE_CARDS, visibleTypeCards, query, typeScope, hasSearched, lastQuery, idleInput, resultInput,
       results, searching, error, scopeLabel, source, recent, counts, pendingIds,
       resultKey, isAvailable, isRequested, resultMeta, recentMeta,
       runSearch, pickType, backToIdle, focusIdle, requestItem,

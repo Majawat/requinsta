@@ -1,5 +1,5 @@
 from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Enum, Boolean, JSON
 from sqlalchemy.sql import func
 from app.models import Base
 
@@ -21,5 +21,9 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER)
     # Whether to email this user when one of their requests becomes available.
     notify_on_available = Column(Boolean, nullable=False, default=True)
+    # Media types this user may search/request. NULL or empty => unrestricted (all
+    # types). A non-empty list restricts them to exactly those types. Admins are
+    # never restricted regardless of this value.
+    allowed_media_types = Column(JSON, nullable=True, default=None)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
