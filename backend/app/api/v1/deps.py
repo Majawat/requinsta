@@ -25,6 +25,29 @@ def get_admin_user(current_user: User = Depends(get_authenticated_user)) -> User
     return current_user
 
 
+# Staff can work the queue (approve/deny requests, resolve issues) but only ADMIN
+# manages users, media managers, plugins and settings.
+STAFF_ROLES = (UserRole.ADMIN, UserRole.MODERATOR)
+
+
+def is_staff(user: User) -> bool:
+    return user.role in STAFF_ROLES
+
+
+def get_staff_user(current_user: User = Depends(get_authenticated_user)) -> User:
+    if not is_staff(current_user):
+        raise HTTPException(status_code=403, detail="Moderator access required")
+    return current_user
+
+
+def require_can_request(user: User) -> None:
+    """READ_ONLY users may browse/search but not create requests."""
+    if user.role == UserRole.READ_ONLY:
+        raise HTTPException(
+            status_code=403, detail="Your account is read-only and can't make requests."
+        )
+
+
 def user_can_request(user: User, media_type: str) -> bool:
     """Whether a user may search/request a given media type. Admins are never
     restricted; a NULL/empty allowed_media_types means unrestricted; otherwise the

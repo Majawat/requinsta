@@ -61,7 +61,7 @@ export default {
     const requests = useRequestsStore()
 
     const queuePending = computed(
-      () => (auth.isAdmin ? requests.requests.filter((r) => r.status === 'PENDING').length : 0)
+      () => (auth.isStaff ? requests.requests.filter((r) => r.status === 'PENDING').length : 0)
     )
 
     const navigation = computed(() => {
@@ -69,9 +69,11 @@ export default {
         { name: 'Search', href: '/', svg: ICON.search, exact: true },
         { name: 'My Requests', href: '/my-requests', svg: ICON.requests },
       ]
-      if (auth.isAdmin) {
-        // Queue = requests + issues (day-to-day); Setup = configuration.
+      // Queue = requests + issues (staff); Setup = configuration (admin only).
+      if (auth.isStaff) {
         nav.push({ name: 'Queue', href: '/admin', svg: ICON.queue, badge: queuePending.value || null, exact: true })
+      }
+      if (auth.isAdmin) {
         nav.push({ name: 'Setup', href: '/admin/setup', svg: ICON.setup })
       }
       nav.push({ name: 'Profile', href: '/profile', svg: ICON.profile })

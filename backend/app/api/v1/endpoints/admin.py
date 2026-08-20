@@ -8,7 +8,7 @@ from app.models.request import Request, RequestStatus
 from app.models.issue import Issue
 from app.models.user import User, UserRole
 from app.core.security import get_password_hash
-from app.api.v1.deps import get_admin_user
+from app.api.v1.deps import get_admin_user, get_staff_user
 from app.api.v1.endpoints.requests import RequestResponse
 from app.services.fulfillment import resolve_target_instance, push_to_manager
 from app.services.notifications import notify_request_fulfilled
@@ -167,7 +167,7 @@ async def update_request_status(
     request_id: int,
     status_data: UpdateRequestStatus,
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_staff_user),
 ):
     request = db.query(Request).filter(Request.id == request_id).first()
     if not request:
@@ -190,7 +190,7 @@ async def approve_request(
     request_id: int,
     body: ApproveRequest = ApproveRequest(),
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_staff_user),
 ):
     """Approve a request and, if a media-manager instance is eligible/chosen,
     push it there. The push is best-effort: its outcome is recorded on the

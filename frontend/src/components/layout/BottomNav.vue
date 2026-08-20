@@ -51,7 +51,7 @@ export default {
       () => requests.requests.filter((r) => r.user_id === auth.user?.id && r.status === 'PENDING').length
     )
     const queuePending = computed(
-      () => (auth.isAdmin ? requests.requests.filter((r) => r.status === 'PENDING').length : 0)
+      () => (auth.isStaff ? requests.requests.filter((r) => r.status === 'PENDING').length : 0)
     )
 
     const tabs = computed(() => {
@@ -59,7 +59,7 @@ export default {
         { name: 'Search', href: '/', svg: ICON.search },
         { name: 'Requests', href: '/my-requests', svg: ICON.requests, badge: myPending.value || null },
       ]
-      if (auth.isAdmin) list.push({ name: 'Queue', href: '/admin', svg: ICON.queue, badge: queuePending.value || null })
+      if (auth.isStaff) list.push({ name: 'Queue', href: '/admin', svg: ICON.queue, badge: queuePending.value || null })
       list.push({ name: 'Profile', href: '/profile', svg: ICON.profile })
       return list
     })
