@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.models import get_db
 from app.models.request import Request, RequestStatus, MediaType
+from app.models.issue import Issue
 from app.models.user import User, UserRole
 from app.api.v1.deps import get_authenticated_user, require_media_type_access
 
@@ -79,3 +80,34 @@ async def create_request(
     db.commit()
     db.refresh(request)
     return request
+
+
+@router.delete("/{request_id}")
+async def delete_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
+):
+    """Delete a request. A user may cancel their own request while it's still
+    PENDING (this powers the "undo" on a fresh request and "cancel request" in the
+    detail sheet); an admin may delete any request in any status. Deleting a
+    request only removes the tracking row — it does not touch the media manager."""
+    request = db.query(Request).filter(Request.id == request_id).first()
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    is_admin = current_user.role == UserRole.ADMIN
+    if not is_admin:
+        if request.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not your request")
+        if request.status != RequestStatus.PENDING:
+            raise HTTPException(
+                status_code=400,
+                detail="Only a pending request can be cancelled — ask an admin to remove it.",
+            )
+
+    # Remove dependent issues first (issues.request_id has no ON DELETE cascade).
+    db.query(Issue).filter(Issue.request_id == request_id).delete(synchronize_session=False)
+    db.delete(request)
+    db.commit()
+    return {"message": "Request deleted"}

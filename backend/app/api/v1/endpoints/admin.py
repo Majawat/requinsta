@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.models import get_db
 from app.models.request import Request, RequestStatus
+from app.models.issue import Issue
 from app.models.user import User, UserRole
 from app.core.security import get_password_hash
 from app.api.v1.deps import get_admin_user
@@ -90,6 +91,13 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Cascade the user's requests and any issues (no ON DELETE cascade in the
+    # schema, so deleting a user with requests would otherwise fail the FK).
+    req_ids = [r.id for r in db.query(Request.id).filter(Request.user_id == user_id).all()]
+    db.query(Issue).filter(
+        (Issue.user_id == user_id) | (Issue.request_id.in_(req_ids))
+    ).delete(synchronize_session=False)
+    db.query(Request).filter(Request.user_id == user_id).delete(synchronize_session=False)
     db.delete(user)
     db.commit()
     return {"message": "User deleted"}

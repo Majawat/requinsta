@@ -38,5 +38,15 @@ export const useRequestsStore = defineStore("requests", {
         return { success: false, error: error.response?.data?.detail || "Request creation failed" };
       }
     },
+
+    async deleteRequest(id) {
+      try {
+        await axios.delete(`${API_URL}/requests/${id}`);
+        this.requests = this.requests.filter((r) => r.id !== id);
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.response?.data?.detail || "Delete failed" };
+      }
+    },
   },
 });
