@@ -44,3 +44,13 @@ def require_media_type_access(user: User, media_type: str) -> None:
             status_code=403,
             detail=f"You don't have access to request {media_type} items.",
         )
+
+
+def user_auto_approves(user: User, media_type: str) -> bool:
+    """Whether this user's request for a media type should be auto-approved.
+    Admins auto-approve their own requests; otherwise the type must be in the
+    user's auto_approve_media_types list."""
+    if user.role == UserRole.ADMIN:
+        return True
+    allowed = user.auto_approve_media_types
+    return bool(allowed) and media_type in allowed

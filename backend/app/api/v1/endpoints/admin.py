@@ -35,6 +35,11 @@ class UpdateUserMediaTypes(BaseModel):
     allowed_media_types: Optional[List[str]] = None
 
 
+class UpdateUserAutoApprove(BaseModel):
+    # Empty list / null => no auto-approval.
+    auto_approve_media_types: Optional[List[str]] = None
+
+
 class CreateUser(BaseModel):
     email: EmailStr
     password: str
@@ -48,6 +53,7 @@ class UserResponse(BaseModel):
     email: str
     role: UserRole
     allowed_media_types: Optional[List[str]] = None
+    auto_approve_media_types: Optional[List[str]] = None
 
 
 @router.get("/users", response_model=List[UserResponse])
@@ -134,6 +140,23 @@ async def update_user_media_types(
     # Normalize an empty selection to NULL (unrestricted) so the two "all types"
     # representations don't diverge.
     user.allowed_media_types = body.allowed_media_types or None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/users/{user_id}/auto-approve", response_model=UserResponse)
+async def update_user_auto_approve(
+    user_id: int,
+    body: UpdateUserAutoApprove,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.auto_approve_media_types = body.auto_approve_media_types or None
     db.commit()
     db.refresh(user)
     return user
