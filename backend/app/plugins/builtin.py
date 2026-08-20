@@ -23,6 +23,9 @@ from app.plugins.radarr import RadarrManager
 from app.plugins.sonarr import SonarrManager
 from app.plugins.mylar import MylarManager
 from app.plugins.email_notifier import EmailNotifier
+from app.plugins.discord_notifier import DiscordNotifier
+from app.plugins.webhook_notifier import WebhookNotifier
+from app.plugins.ntfy_notifier import NtfyNotifier
 
 _ALL_MEDIA_TYPES = ["book", "audiobook", "movie", "tv_show", "music", "comic", "podcast", "other"]
 
@@ -186,6 +189,45 @@ def _builtin_descriptors():
                 ConfigField(key="SMTP_USERNAME", label="Username", type="string"),
                 ConfigField(key="SMTP_PASSWORD", label="Password", type="password", secret=True),
                 ConfigField(key="SMTP_USE_TLS", label="Use STARTTLS", type="boolean", default=True),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=NOTIFIER,
+            key="discord",
+            display_name="Discord",
+            version="1.0.0",
+            obj=DiscordNotifier(),
+            config_scope=CONFIG_GLOBAL,
+            config_schema=[
+                ConfigField(key="DISCORD_WEBHOOK_URL", label="Webhook URL", type="password",
+                            required=True, secret=True,
+                            help="Discord → Channel → Edit → Integrations → Webhooks"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=NOTIFIER,
+            key="webhook",
+            display_name="Webhook (generic JSON)",
+            version="1.0.0",
+            obj=WebhookNotifier(),
+            config_scope=CONFIG_GLOBAL,
+            config_schema=[
+                ConfigField(key="WEBHOOK_URL", label="Webhook URL", type="string", required=True,
+                            help="POSTs {title, message, source} as JSON"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=NOTIFIER,
+            key="ntfy",
+            display_name="ntfy",
+            version="1.0.0",
+            obj=NtfyNotifier(),
+            config_scope=CONFIG_GLOBAL,
+            config_schema=[
+                ConfigField(key="NTFY_URL", label="Topic URL", type="string", required=True,
+                            help="e.g. https://ntfy.sh/my-topic"),
+                ConfigField(key="NTFY_TOKEN", label="Access Token", type="password", secret=True,
+                            help="Optional, for protected topics"),
             ],
         ),
     ]
