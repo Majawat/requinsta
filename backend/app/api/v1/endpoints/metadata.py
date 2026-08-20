@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.models import get_db
 from app.models.request import Request, RequestStatus, MediaType
 from app.models.user import User
-from app.api.v1.deps import get_authenticated_user
+from app.api.v1.deps import get_authenticated_user, require_media_type_access
 from app.plugins.manager import plugin_manager
 from app.plugins.media_manager_registry import media_manager_registry
 from app.plugins.provider_selection import selected_provider_name
@@ -116,12 +116,13 @@ async def search_metadata(
     query: str,
     media_type: str,
     db: Session = Depends(get_db),
-    _: User = Depends(get_authenticated_user),
+    current_user: User = Depends(get_authenticated_user),
 ) -> List[MediaMetadataResponse]:
     """Search the source chosen for this media type. Default is manager-first:
     query the media managers that handle the type (results carry their exact ids
     and availability). If an admin picked a metadata provider, use that instead;
     if nothing handles the type, fall back to all providers."""
+    require_media_type_access(current_user, media_type)
     provider_name = selected_provider_name(db, media_type)
     has_managers = bool(media_manager_registry.instances_for_media_type(db, media_type))
 

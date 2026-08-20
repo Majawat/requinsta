@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.models import get_db
 from app.models.request import Request, RequestStatus
@@ -29,6 +29,11 @@ class UpdateUserRole(BaseModel):
     role: UserRole
 
 
+class UpdateUserMediaTypes(BaseModel):
+    # Empty list / null => unrestricted (all types).
+    allowed_media_types: Optional[List[str]] = None
+
+
 class CreateUser(BaseModel):
     email: EmailStr
     password: str
@@ -36,9 +41,12 @@ class CreateUser(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     email: str
     role: UserRole
+    allowed_media_types: Optional[List[str]] = None
 
 
 @router.get("/users", response_model=List[UserResponse])
@@ -99,6 +107,25 @@ async def update_user_role(
         raise HTTPException(status_code=404, detail="User not found")
 
     user.role = role_data.role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/users/{user_id}/media-types", response_model=UserResponse)
+async def update_user_media_types(
+    user_id: int,
+    body: UpdateUserMediaTypes,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_admin_user),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Normalize an empty selection to NULL (unrestricted) so the two "all types"
+    # representations don't diverge.
+    user.allowed_media_types = body.allowed_media_types or None
     db.commit()
     db.refresh(user)
     return user
