@@ -21,6 +21,7 @@ from app.plugins.readarr import ReadarrManager
 from app.plugins.lidarr import LidarrManager
 from app.plugins.radarr import RadarrManager
 from app.plugins.sonarr import SonarrManager
+from app.plugins.mylar import MylarManager
 from app.plugins.email_notifier import EmailNotifier
 
 _ALL_MEDIA_TYPES = ["book", "audiobook", "movie", "tv_show", "music", "comic", "podcast", "other"]
@@ -151,6 +152,24 @@ def _builtin_descriptors():
                 ConfigField(key="root_folder_path", label="Root Folder", type="select",
                             help="loaded from the instance"),
                 ConfigField(key="quality_profile_id", label="Quality Profile", type="select"),
+            ],
+        ),
+        PluginDescriptor(
+            plugin_type=MEDIA_MANAGER,
+            key="mylar",
+            display_name="Mylar3",
+            version="1.0.0",
+            obj=MylarManager(),
+            config_scope=CONFIG_INSTANCE,
+            media_types=["comic"],
+            config_schema=[
+                ConfigField(key="base_url", label="Base URL", type="string", required=True,
+                            help="e.g. http://192.168.1.10:8090"),
+                ConfigField(key="api_key", label="API Key", type="password", required=True, secret=True,
+                            help="Mylar → Settings → Web Interface → API"),
+                ConfigField(key="media_types", label="Media Types", type="multiselect",
+                            options=["comic"]),
+                # Mylar has no root-folder / quality / metadata profiles.
             ],
         ),
         PluginDescriptor(
