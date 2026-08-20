@@ -1,90 +1,68 @@
 <template>
-  <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-md">
-    <h2 class="text-xl font-bold mb-4 text-white">User Management</h2>
+  <div class="space-y-5">
+    <h2 class="text-base font-semibold">User management</h2>
 
     <!-- Add User Form -->
-    <div class="border-b border-gray-600 pb-4 mb-4">
-      <h3 class="text-lg font-medium mb-2 text-white">Add New User</h3>
+    <div class="card p-5">
+      <h3 class="text-base font-semibold mb-3">Add new user</h3>
       <form @submit.prevent="addUser" class="space-y-2">
-        <input
-          v-model="newUser.email"
-          type="email"
-          placeholder="Email"
-          required
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-        <input
-          v-model="newUser.password"
-          type="password"
-          placeholder="Password"
-          required
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
-        <select
-          v-model="newUser.role"
-          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+        <input v-model="newUser.email" type="email" placeholder="Email" required class="input" />
+        <input v-model="newUser.password" type="password" placeholder="Password" required class="input" />
+        <select v-model="newUser.role" class="input">
           <option v-for="role in ROLES" :key="role.value" :value="role.value">{{ role.label }}</option>
         </select>
-        <button
-          type="submit"
-          :disabled="adding"
-          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50">
-          {{ adding ? "Adding..." : "Add User" }}
+        <button type="submit" :disabled="adding" class="btn-primary w-full">
+          {{ adding ? "Adding…" : "Add user" }}
         </button>
       </form>
     </div>
 
     <!-- Users List -->
-    <div v-if="loading" class="text-gray-400">Loading users...</div>
+    <div v-if="loading" class="text-slate-400 text-sm">Loading users…</div>
     <div v-else class="space-y-3">
-      <div
-        v-for="user in users"
-        :key="user.id"
-        class="border border-gray-600 rounded p-3 bg-gray-700 space-y-3">
-        <div class="flex justify-between items-center">
-          <div>
-            <h3 class="font-medium text-white">{{ user.email }}</h3>
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
+      <div v-for="user in users" :key="user.id" class="card p-4 space-y-3">
+        <div class="flex justify-between items-center gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-slate-100 truncate">{{ user.email }}</h3>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-500/15 text-indigo-300">
               {{ user.role }}
             </span>
           </div>
-          <div class="flex space-x-2">
+          <div class="flex gap-2 flex-none">
             <select
               :value="user.role"
               @change="updateUserRole(user.id, $event.target.value)"
-              class="text-xs bg-gray-600 border border-gray-500 rounded px-2 py-1 text-white">
+              class="text-xs bg-slate-800 border border-slate-700 rounded-md px-2 py-1.5 text-slate-200 focus:outline-none focus:border-indigo-500">
               <option v-for="role in ROLES" :key="role.value" :value="role.value">{{ role.label }}</option>
             </select>
-            <button
-              @click="deleteUser(user.id)"
-              class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
-              Delete
-            </button>
+            <button @click="deleteUser(user.id)" class="btn-deny btn-sm">Delete</button>
           </div>
         </div>
 
         <!-- Per-user media-type access -->
-        <div class="border-t border-gray-600 pt-2">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-medium text-gray-300">Can request</span>
-            <span v-if="user.role === 'ADMIN'" class="text-xs text-gray-400">All types (admin)</span>
-            <span v-else-if="!user.allowed_media_types || !user.allowed_media_types.length" class="text-xs text-green-400">All types</span>
-            <span v-else class="text-xs text-yellow-400">{{ user.allowed_media_types.length }} type(s)</span>
+        <div class="border-t border-slate-800 pt-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="eyebrow">Can request</span>
+            <span v-if="user.role === 'ADMIN'" class="text-xs text-slate-400">All types (admin)</span>
+            <span v-else-if="!user.allowed_media_types || !user.allowed_media_types.length" class="text-xs text-emerald-300">All types</span>
+            <span v-else class="text-xs text-amber-300">{{ user.allowed_media_types.length }} type(s)</span>
           </div>
           <div class="flex flex-wrap gap-2">
             <label
               v-for="mt in MEDIA_TYPES"
               :key="mt.value"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded"
-              :class="user.role === 'ADMIN' ? 'text-gray-500 cursor-not-allowed' : 'text-gray-200 bg-gray-800 cursor-pointer'">
+              class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md"
+              :class="user.role === 'ADMIN' ? 'text-slate-600 cursor-not-allowed' : 'text-slate-200 bg-slate-800 cursor-pointer'">
               <input
                 type="checkbox"
+                class="accent-indigo-600 w-3.5 h-3.5"
                 :disabled="user.role === 'ADMIN' || savingAccess === user.id"
                 :checked="isAllowed(user, mt.value)"
                 @change="toggleType(user, mt.value, $event.target.checked)" />
               {{ mt.label }}
             </label>
           </div>
-          <p class="text-xs text-gray-500 mt-1">None checked = all types allowed.</p>
+          <p class="text-xs text-slate-500 mt-1">None checked = all types allowed.</p>
         </div>
       </div>
     </div>
