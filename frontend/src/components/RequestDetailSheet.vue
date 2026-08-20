@@ -97,10 +97,26 @@
                 <button v-else class="btn-secondary w-full" @click="startReport">Report an issue</button>
               </div>
 
+              <!-- Cancel / delete -->
+              <div v-if="canDelete" class="px-[18px] pb-4 flex flex-col gap-3">
+                <div class="h-px bg-slate-800"></div>
+                <button class="btn-deny w-full" @click="confirmOpen = true">{{ deleteLabel }}</button>
+              </div>
+
               <div class="h-4"></div>
             </div>
           </div>
         </transition>
+
+        <ConfirmModal
+          :open="confirmOpen"
+          :title="deleteLabel + '?'"
+          :message="confirmMessage"
+          :confirm-label="deleteLabel"
+          :busy="deleting"
+          @confirm="doDelete"
+          @cancel="confirmOpen = false"
+        />
       </div>
     </transition>
   </teleport>
@@ -112,7 +128,10 @@ import axios from 'axios'
 import MediaThumb from './ui/MediaThumb.vue'
 import TypeBadge from './ui/TypeBadge.vue'
 import StatusPill from './ui/StatusPill.vue'
+import ConfirmModal from './ui/ConfirmModal.vue'
 import { useUiStore } from '../stores/ui'
+import { useAuthStore } from '../stores/auth'
+import { useRequestsStore } from '../stores/requests'
 import { statusMeta, formatDateTime, formatRelative } from '../utils/requestUtils'
 import { API_URL } from '../utils/api'
 
@@ -128,17 +147,47 @@ const CATEGORIES = [
 // key on those directly.
 export default {
   name: 'RequestDetailSheet',
-  components: { MediaThumb, TypeBadge, StatusPill },
+  components: { MediaThumb, TypeBadge, StatusPill, ConfirmModal },
   setup() {
     const ui = useUiStore()
+    const auth = useAuthStore()
+    const requestsStore = useRequestsStore()
     const req = computed(() => ui.sheetRequest)
     const issues = ref([])
     const reporting = ref(false)
     const submitting = ref(false)
     const form = reactive({ category: 'WRONG_CONTENT', description: '' })
+    const confirmOpen = ref(false)
+    const deleting = ref(false)
 
     const mediaKey = computed(() => (req.value?.media_type || 'other'))
     const statusKey = computed(() => req.value?.status || 'PENDING')
+
+    const isAdmin = computed(() => auth.isAdmin)
+    const isOwn = computed(() => req.value?.user_id === auth.user?.id)
+    // A user can cancel their own request while it's pending; an admin can remove
+    // any request in any status.
+    const canCancel = computed(() => statusKey.value === 'PENDING' && (isOwn.value || isAdmin.value))
+    const canDelete = computed(() => canCancel.value || isAdmin.value)
+    const deleteLabel = computed(() => (canCancel.value ? 'Cancel request' : 'Delete request'))
+    const confirmMessage = computed(() =>
+      canCancel.value
+        ? 'This removes your pending request. It has not been sent to a media manager yet.'
+        : 'This removes the request from the list. It does not delete any downloaded media.'
+    )
+
+    const doDelete = async () => {
+      deleting.value = true
+      const res = await requestsStore.deleteRequest(req.value.id)
+      deleting.value = false
+      confirmOpen.value = false
+      if (res.success) {
+        ui.toast(canCancel.value ? 'Request cancelled' : 'Request deleted')
+        ui.closeSheet()
+      } else {
+        ui.toast(res.error || 'Could not delete the request', { type: 'error' })
+      }
+    }
 
     const metaLine = computed(() => {
       if (!req.value) return ''
@@ -223,6 +272,7 @@ export default {
     // Reset per-request UI state and (re)load issues whenever the open request changes.
     watch(req, (r) => {
       reporting.value = false
+      confirmOpen.value = false
       if (r) loadIssues()
     })
 
@@ -236,6 +286,7 @@ export default {
       ui, req, issues, reporting, submitting, form, CATEGORIES,
       mediaKey, statusKey, statusLabel, metaLine, timeline, dotClass,
       categoryLabel, startReport, submitReport, close, sheetTransition,
+      confirmOpen, deleting, canDelete, deleteLabel, confirmMessage, doDelete,
     }
   },
 }

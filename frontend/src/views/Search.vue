@@ -335,7 +335,14 @@ export default {
       if (res.success) {
         requestedKeys.value.add(key)
         requestedKeys.value = new Set(requestedKeys.value) // trigger reactivity
-        ui.toast(`Requested <strong>${escapeHtml(r.title)}</strong>`)
+        const newId = res.request?.id
+        ui.toast(`Requested <strong>${escapeHtml(r.title)}</strong>`, {
+          actionLabel: 'Undo',
+          onAction: async () => {
+            if (newId) await requestsStore.deleteRequest(newId)
+            const s = new Set(requestedKeys.value); s.delete(key); requestedKeys.value = s
+          },
+        })
       } else {
         ui.toast(res.error || `Couldn't request ${r.title}`, { type: 'error' })
       }

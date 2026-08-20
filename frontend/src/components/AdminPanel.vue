@@ -38,6 +38,7 @@
           <button v-if="request.status === 'PENDING'" @click="startApprove(request)" class="btn-primary btn-sm">Approve</button>
           <button v-if="request.status !== 'FULFILLED'" @click="updateStatus(request.id, 'FULFILLED')" class="btn-secondary btn-sm">Mark fulfilled</button>
           <button v-if="request.status !== 'DENIED'" @click="updateStatus(request.id, 'DENIED')" class="btn-deny btn-sm">Deny</button>
+          <button @click="confirmDeleteId = request.id" class="btn-ghost btn-sm">Delete</button>
         </div>
 
         <!-- Approve picker: shown while choosing a target for this request -->
@@ -56,20 +57,32 @@
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :open="confirmDeleteId !== null"
+      title="Delete request?"
+      message="This removes the request from the list. It does not delete any downloaded media."
+      confirm-label="Delete request"
+      :busy="deleting"
+      @confirm="doDelete"
+      @cancel="confirmDeleteId = null"
+    />
   </div>
 </template>
 
 <script>
 import { useRequestsStore } from "../stores/requests";
+import { useUiStore } from "../stores/ui";
 import axios from "axios";
 import { API_URL } from "../utils/api";
 import MediaThumb from "./ui/MediaThumb.vue";
 import StatusPill from "./ui/StatusPill.vue";
 import TypeBadge from "./ui/TypeBadge.vue";
+import ConfirmModal from "./ui/ConfirmModal.vue";
 
 export default {
   name: "AdminPanel",
-  components: { MediaThumb, StatusPill, TypeBadge },
+  components: { MediaThumb, StatusPill, TypeBadge, ConfirmModal },
   props: {
     requests: Array,
   },
@@ -78,12 +91,23 @@ export default {
       approvingId: null,
       selectedInstanceId: null,
       eligible: [],
+      confirmDeleteId: null,
+      deleting: false,
     };
   },
   created() {
     this.requestsStore = useRequestsStore();
+    this.ui = useUiStore();
   },
   methods: {
+    async doDelete() {
+      this.deleting = true;
+      const res = await this.requestsStore.deleteRequest(this.confirmDeleteId);
+      this.deleting = false;
+      this.confirmDeleteId = null;
+      this.ui.toast(res.success ? "Request deleted" : (res.error || "Could not delete"), res.success ? {} : { type: "error" });
+    },
+
     _replace(updated) {
       const idx = this.requestsStore.requests.findIndex((r) => r.id === updated.id);
       if (idx !== -1) this.requestsStore.requests[idx] = updated;
