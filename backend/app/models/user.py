@@ -25,5 +25,9 @@ class User(Base):
     # types). A non-empty list restricts them to exactly those types. Admins are
     # never restricted regardless of this value.
     allowed_media_types = Column(JSON, nullable=True, default=None)
+    # Media types whose requests are auto-approved for this user (skip the queue,
+    # push immediately). NULL/empty => none. Admins auto-approve their own requests
+    # regardless of this value.
+    auto_approve_media_types = Column(JSON, nullable=True, default=None)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

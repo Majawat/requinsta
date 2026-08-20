@@ -336,7 +336,11 @@ export default {
         requestedKeys.value.add(key)
         requestedKeys.value = new Set(requestedKeys.value) // trigger reactivity
         const newId = res.request?.id
-        ui.toast(`Requested <strong>${escapeHtml(r.title)}</strong>`, {
+        const autoApproved = res.request?.status && res.request.status !== 'PENDING'
+        const label = autoApproved
+          ? `Requested <strong>${escapeHtml(r.title)}</strong> — auto-approved`
+          : `Requested <strong>${escapeHtml(r.title)}</strong>`
+        ui.toast(label, {
           actionLabel: 'Undo',
           onAction: async () => {
             if (newId) await requestsStore.deleteRequest(newId)

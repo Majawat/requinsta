@@ -64,6 +64,32 @@
           </div>
           <p class="text-xs text-slate-500 mt-1">None checked = all types allowed.</p>
         </div>
+
+        <!-- Per-user auto-approval -->
+        <div class="border-t border-slate-800 pt-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="eyebrow">Auto-approve</span>
+            <span v-if="user.role === 'ADMIN'" class="text-xs text-slate-400">Own requests (admin)</span>
+            <span v-else-if="!user.auto_approve_media_types || !user.auto_approve_media_types.length" class="text-xs text-slate-400">Off</span>
+            <span v-else class="text-xs text-sky-300">{{ user.auto_approve_media_types.length }} type(s)</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <label
+              v-for="mt in MEDIA_TYPES"
+              :key="mt.value"
+              class="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md"
+              :class="user.role === 'ADMIN' ? 'text-slate-600 cursor-not-allowed' : 'text-slate-200 bg-slate-800 cursor-pointer'">
+              <input
+                type="checkbox"
+                class="accent-indigo-600 w-3.5 h-3.5"
+                :disabled="user.role === 'ADMIN' || savingAuto === user.id"
+                :checked="isAutoApprove(user, mt.value)"
+                @change="toggleAutoApprove(user, mt.value, $event.target.checked)" />
+              {{ mt.label }}
+            </label>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Checked types skip the approval queue and push immediately.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -104,6 +130,7 @@ export default {
         role: "USER",
       },
       savingAccess: null,
+      savingAuto: null,
       ROLES,
       MEDIA_TYPES,
     };
@@ -171,6 +198,29 @@ export default {
         alert(error.response?.data?.detail || "Failed to update access");
       } finally {
         this.savingAccess = null;
+      }
+    },
+
+    isAutoApprove(user, type) {
+      return Array.isArray(user.auto_approve_media_types) && user.auto_approve_media_types.includes(type);
+    },
+
+    async toggleAutoApprove(user, type, checked) {
+      const current = Array.isArray(user.auto_approve_media_types) ? [...user.auto_approve_media_types] : [];
+      const next = checked ? [...new Set([...current, type])] : current.filter((t) => t !== type);
+      this.savingAuto = user.id;
+      try {
+        const { data: updated } = await axios.patch(
+          `${API_URL}/admin/users/${user.id}/auto-approve`,
+          { auto_approve_media_types: next }
+        );
+        const idx = this.users.findIndex((u) => u.id === user.id);
+        if (idx !== -1) this.users[idx] = updated;
+      } catch (error) {
+        console.error("Failed to update auto-approve:", error);
+        alert(error.response?.data?.detail || "Failed to update auto-approve");
+      } finally {
+        this.savingAuto = null;
       }
     },
 

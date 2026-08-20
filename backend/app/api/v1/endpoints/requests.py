@@ -8,7 +8,12 @@ from app.models import get_db
 from app.models.request import Request, RequestStatus, MediaType
 from app.models.issue import Issue
 from app.models.user import User, UserRole
-from app.api.v1.deps import get_authenticated_user, require_media_type_access
+from app.api.v1.deps import (
+    get_authenticated_user,
+    require_media_type_access,
+    user_auto_approves,
+)
+from app.services.fulfillment import resolve_target_instance, push_to_manager
 
 router = APIRouter()
 
@@ -79,6 +84,19 @@ async def create_request(
     db.add(request)
     db.commit()
     db.refresh(request)
+
+    # Auto-approval: trusted users (and admins, for their own requests) skip the
+    # queue. Approve and push to a manager if exactly one instance resolves; if
+    # none/many resolve, leave it APPROVED for an admin to route.
+    if user_auto_approves(current_user, request_data.media_type.value):
+        request.status = RequestStatus.APPROVED
+        db.commit()
+        db.refresh(request)
+        instance, error = resolve_target_instance(db, request, None)
+        if instance is not None and not error:
+            await push_to_manager(db, request, instance)
+            db.refresh(request)
+
     return request
 
 
@@ -100,10 +118,12 @@ async def delete_request(
     if not is_admin:
         if request.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not your request")
-        if request.status != RequestStatus.PENDING:
+        # A user can cancel their own request until it's fulfilled/denied — covers a
+        # pending request and an auto-approved one that's still downloading.
+        if request.status not in (RequestStatus.PENDING, RequestStatus.APPROVED):
             raise HTTPException(
                 status_code=400,
-                detail="Only a pending request can be cancelled — ask an admin to remove it.",
+                detail="This request can no longer be cancelled — ask an admin to remove it.",
             )
 
     # Remove dependent issues first (issues.request_id has no ON DELETE cascade).
