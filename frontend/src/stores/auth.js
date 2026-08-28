@@ -12,6 +12,10 @@ export const useAuthStore = defineStore("auth", {
 
   getters: {
     isAdmin: (state) => state.user?.role?.toUpperCase() === "ADMIN",
+    // Staff can work the queue (approve/deny + issues); only admins manage setup.
+    isStaff: (state) => ["ADMIN", "MODERATOR"].includes(state.user?.role?.toUpperCase()),
+    // READ_ONLY accounts can browse but not create requests.
+    canRequest: (state) => state.user?.role?.toUpperCase() !== "READ_ONLY",
   },
 
   actions: {

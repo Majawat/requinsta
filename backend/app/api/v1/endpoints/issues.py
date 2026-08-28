@@ -8,7 +8,7 @@ from app.models import get_db
 from app.models.issue import Issue, IssueCategory, IssueStatus
 from app.models.request import Request, RequestStatus
 from app.models.user import User, UserRole
-from app.api.v1.deps import get_authenticated_user, get_admin_user
+from app.api.v1.deps import get_authenticated_user, get_staff_user, is_staff
 
 router = APIRouter()
 
@@ -89,9 +89,9 @@ def list_issues(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_authenticated_user),
 ):
-    """Admins see all issues; regular users see only their own."""
+    """Staff see all issues; regular users see only their own."""
     query = db.query(Issue)
-    if current_user.role != UserRole.ADMIN:
+    if not is_staff(current_user):
         query = query.filter(Issue.user_id == current_user.id)
     issues = query.order_by(Issue.created_at.desc()).all()
 
@@ -109,7 +109,7 @@ def update_issue(
     issue_id: int,
     body: IssueUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_admin_user),
+    _: User = Depends(get_staff_user),
 ):
     issue = db.query(Issue).filter(Issue.id == issue_id).first()
     if not issue:

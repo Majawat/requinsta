@@ -25,14 +25,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    // Day-to-day admin: the requests + issues queues.
+    // Day-to-day admin: the requests + issues queues (staff = admin or moderator).
     path: '/admin',
     name: 'Queue',
     component: Admin,
-    meta: { requiresAuth: true, requiresAdmin: true, section: 'queue' }
+    meta: { requiresAuth: true, requiresStaff: true, section: 'queue' }
   },
   {
-    // Configuration, split off from the daily queue.
+    // Configuration, split off from the daily queue — admins only.
     path: '/admin/setup',
     name: 'Setup',
     component: Admin,
@@ -63,6 +63,9 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { path: '/' }
+  }
+  if (to.meta.requiresStaff && !authStore.isStaff) {
     return { path: '/' }
   }
 

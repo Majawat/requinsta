@@ -79,14 +79,14 @@
             <span class="text-[13px] font-semibold text-emerald-300">In library</span>
           </div>
           <StatusPill v-else-if="isRequested(r)" status="PENDING" label="Requested" class="flex-none" />
-          <button v-else class="btn-primary btn-sm flex-none" :disabled="pendingIds.has(resultKey(r))" @click="requestItem(r)">
+          <button v-else-if="canRequest" class="btn-primary btn-sm flex-none" :disabled="pendingIds.has(resultKey(r))" @click="requestItem(r)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
             Request
           </button>
         </div>
 
         <!-- Not here? -->
-        <button class="w-full text-left m-1 mt-4 p-3.5 rounded-[10px] border border-dashed border-slate-700 hover:border-slate-600 flex items-center gap-3" @click="openManual">
+        <button v-if="canRequest" class="w-full text-left m-1 mt-4 p-3.5 rounded-[10px] border border-dashed border-slate-700 hover:border-slate-600 flex items-center gap-3" @click="openManual">
           <span class="grid place-items-center w-[34px] h-[34px] rounded-lg bg-slate-800 flex-none">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
           </span>
@@ -238,6 +238,7 @@ export default {
     const mine = computed(() => requestsStore.requests.filter((r) => r.user_id === authStore.user?.id))
 
     // Per-user media-type access. null => unrestricted (admins, or no list set).
+    const canRequest = computed(() => authStore.canRequest)
     const allowedTypes = computed(() => {
       const a = authStore.user?.allowed_media_types
       if (authStore.isAdmin || !a || !a.length) return null
@@ -390,7 +391,7 @@ export default {
     })
 
     return {
-      TYPE_CARDS, visibleTypeCards, query, typeScope, hasSearched, lastQuery, idleInput, resultInput,
+      TYPE_CARDS, visibleTypeCards, canRequest, query, typeScope, hasSearched, lastQuery, idleInput, resultInput,
       results, searching, error, scopeLabel, source, recent, counts, pendingIds,
       resultKey, isAvailable, isRequested, resultMeta, recentMeta,
       runSearch, pickType, backToIdle, focusIdle, requestItem,

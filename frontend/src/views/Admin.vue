@@ -4,6 +4,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-[22px] font-bold tracking-tight">{{ isSetup ? 'Setup' : 'Queue' }}</h1>
       <router-link
+        v-if="isAdmin"
         :to="isSetup ? '/admin' : '/admin/setup'"
         class="btn-secondary btn-sm"
       >
@@ -90,6 +91,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useRequestsStore } from '../stores/requests'
+import { useAuthStore } from '../stores/auth'
 import { formatDate } from '../utils/requestUtils'
 import { API_URL } from '../utils/api'
 import AdminPanel from '../components/AdminPanel.vue'
@@ -106,9 +108,11 @@ export default {
   setup() {
     const route = useRoute()
     const requestsStore = useRequestsStore()
+    const auth = useAuthStore()
     const totalUsers = ref(0)
 
     const isSetup = computed(() => route.meta.section === 'setup')
+    const isAdmin = computed(() => auth.isAdmin)
 
     const pendingRequests = computed(() => requestsStore.requests.filter((r) => r.status === 'PENDING').length)
     const openIssues = ref(0)
@@ -148,7 +152,7 @@ export default {
       } catch (e) { /* non-fatal */ }
     })
 
-    return { requestsStore, isSetup, tabs, activeTab, totalUsers, pendingRequests, fulfilledRequests, formatDate }
+    return { requestsStore, isSetup, isAdmin, tabs, activeTab, totalUsers, pendingRequests, fulfilledRequests, formatDate }
   },
 }
 </script>

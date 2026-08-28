@@ -11,7 +11,9 @@ from app.models.user import User, UserRole
 from app.api.v1.deps import (
     get_authenticated_user,
     require_media_type_access,
+    require_can_request,
     user_auto_approves,
+    is_staff,
 )
 from app.services.fulfillment import resolve_target_instance, push_to_manager
 
@@ -58,7 +60,7 @@ async def get_requests(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_authenticated_user),
 ):
-    if current_user.role == UserRole.ADMIN:
+    if is_staff(current_user):
         return db.query(Request).all()
     return db.query(Request).filter(Request.user_id == current_user.id).all()
 
@@ -69,6 +71,7 @@ async def create_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_authenticated_user),
 ):
+    require_can_request(current_user)
     require_media_type_access(current_user, request_data.media_type.value)
     request = Request(
         user_id=current_user.id,
@@ -114,8 +117,9 @@ async def delete_request(
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
 
-    is_admin = current_user.role == UserRole.ADMIN
-    if not is_admin:
+    # Staff (admin/moderator) may remove any request in any status; a regular user
+    # may only cancel their own before it's fulfilled/denied.
+    if not is_staff(current_user):
         if request.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not your request")
         # A user can cancel their own request until it's fulfilled/denied — covers a
